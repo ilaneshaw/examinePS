@@ -79,7 +79,7 @@ defineModule(sim, list(
                     "Named list of seeds to use for each event (names)."),
     defineParameter(".useCache", "logical", FALSE, NA, NA,
                     "Should caching of events or module be used?"),
-    defineParameter("min2DStatsSample", "numeric", 50, NA, NA,
+    defineParameter("min2DStatsSample", "numeric", 30, NA, NA,
                     "exclude any classes from 2D stats table that have a sample size smaller than minStatsSample")
   ),
   inputObjects = bindrows(
@@ -280,14 +280,14 @@ examine1D <- function(sim) {
   sim$assumpTab1D < sim$assumpTab1D
   
   #save tab for furture graphs comparing with 2D assumptions
-  write.csv(sim$assumpTab1D, file =  file.path(outputFolderBirdPreds, "assumpTab1D"))
+  write.csv(sim$assumpTab1D, file =  file.path(outputFolderBirdPreds, "assumpTab1D.csv"))
   
   #get table of prop of birds with p values under 0.05 per class
   print("get assumptions by class 1D")
   sim$assumptionsByClass1D <- assumpTab1D[order(landForClass)][,list(noBirds = .N,
                                                                       propBirdsNormal = mean(normal),
                                                                       propBirdsUnimodal = mean(unimodal),
-                                                                      binningType = "1DBins"),
+                                                                      smoothingType = "1D"),
                                                                 by = landForClass]
   write.csv(sim$assumptionsByClass1D, file =  file.path(outputFolderBirdPreds, "assumptionsByClass1D.csv"))
   
@@ -296,7 +296,7 @@ examine1D <- function(sim) {
   sim$assumptionsByBird1D <- assumpTab1D[order(birdSp)][,list(noClasses = .N,
                                                               propClassesNormal = mean(normal),
                                                               propClassesUnimodal = mean(unimodal),
-                                                              binningType = "1DBins"),
+                                                              smoothingType = "1D"),
                                                         by = birdSp]
   write.csv(sim$assumptionsByBird1D, file =  file.path(outputFolderBirdPreds, "assumptionsByBird1D.csv"))
   
@@ -304,53 +304,54 @@ examine1D <- function(sim) {
   
   
   #make 1D residual rasters
-  print("make 1D residual rasters")
-  ### Make 1D residual rasters - forClassRaster area only
-  sim$for1DRes <- lapply(X = birdList, FUN = function(bird){
-    
-    NM <- eval(parse(text=paste("sim$birdRasters$", bird, sep = "")))
-    MB <- eval(parse(text=paste("sim$for1DMaps$", bird, sep = "")))
-    res <- NM - MB
-    
-    names(res) <- paste(bird)
-    
-    # clearPlot()
-    # Plot(res, na.color = "gray")
-    
-    print(paste(bird," forest 1D res raster complete"))
-    return(res)
-  })
-  
-  names(sim$for1DRes) <- birdList
+  # print("make 1D residual rasters")
+  # ### Make 1D residual rasters - forClassRaster area only
+  # sim$for1DRes <- lapply(X = birdList, FUN = function(bird){
+  #   
+  #   NM <- eval(parse(text=paste("sim$birdRasters$", bird, sep = "")))
+  #   MB <- eval(parse(text=paste("sim$for1DMaps$", bird, sep = "")))
+  #   res <- NM - MB
+  #   
+  #   names(res) <- paste(bird)
+  #   
+  #   # clearPlot()
+  #   # Plot(res, na.color = "gray")
+  #   
+  #   print(paste(bird," forest 1D res raster complete"))
+  #   return(res)
+  # })
+  # 
+  # names(sim$for1DRes) <- birdList
   
   #as Rdata file
   #save(sim$for1DRes,
   #     file =  file.path(outputFolderBirdPredsRasters, "for1DRes.Rdata"))
   # load(file.path(outputFolderBirdPredsRasters, "for1DRes.Rdata"))
   
-  lapply(X = P(sim)$birdList, FUN = function(bird){
-   
-    raster <- eval(parse(text=paste("sim$for1DRes$", bird, sep = "")))
-    names(raster) <- paste(bird)
-    terra::writeRaster(x = raster, 
-                       filename = file.path(outputFolderBirdPredsRasters, paste(bird, "-for1DRes", sep = "")),
-                       filetype= "GTiff",
-                       gdal="COMPRESS=NONE",
-                       overwrite = TRUE)
-  })
+  # lapply(X = P(sim)$birdList, FUN = function(bird){
+  #  
+  #   raster <- eval(parse(text=paste("sim$for1DRes$", bird, sep = "")))
+  #   names(raster) <- paste(bird)
+  #   terra::writeRaster(x = raster, 
+  #                      filename = file.path(outputFolderBirdPredsRasters, paste(bird, "-for1DRes", sep = "")),
+  #                      filetype= "GTiff",
+  #                      gdal="COMPRESS=NONE",
+  #                      overwrite = TRUE)
+  # })
   
   ### Make residual rasters of composite 1D predictions for forClassraster areas and 1D predictions for landClassRaster areas
   print("Make for1DAndLc1DRes ")
   sim$for1DAndLc1DRes <- lapply(X = P(sim)$birdList, FUN = function(bird){
     
     NM <- eval(parse(text=paste("sim$birdRasters$", bird, sep = "")))
-    MB <- eval(parse(text=paste("sim$for1DAndLc1DMaps$", bird, sep = "")))
-    res <- NM - MB
+    PS <- eval(parse(text=paste("sim$for1DAndLc1DMaps$", bird, sep = "")))
+    res <- NM - PS
     
     names(res) <- paste(bird)
-    
+    # 
     # clearPlot()
-    # Plot(res, na.color = "gray")
+    # Plot(res, na.colour = "blue", title = paste(bird,  " 1D smoothing residuals", sep = ""))
+    # 
     
     print(paste(bird," for 1D and lc 1D res raster complete"))
     return(res)
@@ -391,7 +392,7 @@ examine2D <- function(sim) {
   print("get birdStats2D")
   
   sim$birdStats2D <- lapply(X = P(sim)$birdList, FUN = function(bird) {
-    browser()
+   
     print(bird)
     forestedDT <-  as.data.table(eval(parse(text=paste("sim$birdDatasets$", bird, sep = "")))) 
     #separate out data table rows that are forested from the raw birdDataset 
@@ -471,12 +472,13 @@ examine2D <- function(sim) {
   assumpTab2D$unimodal[assumpTab2D$unimodality > 0.05] <- 1
   assumpTab2D <- assumpTab2D[,c(1,4,5,6)]
   assumpTab2D
+  write.csv(assumpTab2D, file =  file.path(outputFolderBirdPreds, "assumpTab2D.csv"))
   
   #get table of prop of birds with p values under 0.05 per class
   sim$assumptionsByClass2D <- assumpTab2D[order(landAgeClass)][,list(noBirds = .N, 
                                                                      propBirdsNormal = mean(normal), 
                                                                      propBirdsUnimodal = mean(unimodal), 
-                                                                     binningType = "2DBins"),
+                                                                     smoothingType = "2D"),
                                                                by = landAgeClass]
   write.csv(sim$assumptionsByClass2D, file =  file.path(outputFolderBirdPreds, "assumptionsByClass2D.csv"))
   
@@ -484,7 +486,7 @@ examine2D <- function(sim) {
   sim$assumptionsByBird2D <- assumpTab2D[order(birdSp)][,list(noClasses = .N, 
                                                               propClassesNormal = mean(normal),
                                                               propClassesUnimodal = mean(unimodal),
-                                                              binningType = "2DBins"),
+                                                              smoothingType = "2D"),
                                                         by = birdSp]
   write.csv(sim$assumptionsByBird2D, file =  file.path(outputFolderBirdPreds, "assumptionsByBird2D.csv"))
   
@@ -494,46 +496,46 @@ examine2D <- function(sim) {
   #Get residual rasters
   
   ### Make 2D residual rasters - forClassRaster area only
-  print("make for2DRes")
-  sim$for2DRes <- lapply(X = P(sim)$birdList, FUN = function(bird){
-    
-    NM <- eval(parse(text=paste("sim$birdRasters$", bird, sep = "")))
-    MB <- eval(parse(text=paste("sim$for2DMaps$", bird, sep = "")))
-    res <- NM - MB
-    
-    names(res) <- paste(bird)
-    # clearPlot()
-    # Plot(res, na.colour = "gray")
-    
-    print(paste(bird," forest 2D res raster complete"))
-    return(res)
-  })
+  # print("make for2DRes")
+  # sim$for2DRes <- lapply(X = P(sim)$birdList, FUN = function(bird){
+  #   
+  #   NM <- eval(parse(text=paste("sim$birdRasters$", bird, sep = "")))
+  #   MB <- eval(parse(text=paste("sim$for2DMaps$", bird, sep = "")))
+  #   res <- NM - MB
+  #   
+  #   names(res) <- paste(bird)
+  #   # clearPlot()
+  #   # Plot(res, na.colour = "gray")
+  #   
+  #   print(paste(bird," forest 2D res raster complete"))
+  #   return(res)
+  # })
+  # 
+  # names(sim$for2DRes) <- P(sim)$birdList
   
-  names(sim$for2DRes) <- P(sim)$birdList
-  
-  lapply(X = P(sim)$birdList, FUN = function(bird){
-    raster <- eval(parse(text=paste("sim$for2DRes$", bird, sep = "")))
-    names(raster) <- paste(bird)
-    terra::writeRaster(x = raster, 
-                       filename = file.path(outputFolderBirdPredsRasters, paste(bird, "-for2DRes", sep = "")),
-                       filetype= "GTiff",
-                       gdal="COMPRESS=NONE",
-                       overwrite = TRUE)
-  })
+  # lapply(X = P(sim)$birdList, FUN = function(bird){
+  #   raster <- eval(parse(text=paste("sim$for2DRes$", bird, sep = "")))
+  #   names(raster) <- paste(bird)
+  #   terra::writeRaster(x = raster, 
+  #                      filename = file.path(outputFolderBirdPredsRasters, paste(bird, "-for2DRes", sep = "")),
+  #                      filetype= "GTiff",
+  #                      gdal="COMPRESS=NONE",
+  #                      overwrite = TRUE)
+  # })
   
   #Make residual rasters of composite 2D predictions for forClassraster areas and 1D predictions for landClassRaster areas
   print("make for2DAndLc1DRes")
   sim$for2DAndLc1DRes <- lapply(X = P(sim)$birdList, FUN = function(bird){
     
     NM <- eval(parse(text=paste("sim$birdRasters$", bird, sep = "")))
-    MB <- eval(parse(text=paste("sim$for2DAndLc1DMaps$", bird, sep = "")))
-    res <- NM - MB
+    PS <- eval(parse(text=paste("sim$for2DAndLc1DMaps$", bird, sep = "")))
+    res <- NM - PS
     
     names(res) <- paste(bird)
     # clearPlot()
-    # Plot(res, na.colour = "gray")
-    
-    print(paste(bird," for2D and lc 1D res raster complete"))
+    # Plot(res, na.colour = "blue", title = paste(bird,  " 2D smoothing residuals", sep = ""))
+    # 
+    print(paste(bird," for 2D and lc 1D res raster complete"))
     return(res)
   })
   
@@ -550,16 +552,16 @@ examine2D <- function(sim) {
   })
   
   ### ANALYSIS
-  
+ 
   #calculate spearman stats
   print("get spearman stats")
   spearmanStats <- lapply(X = P(sim)$birdList, FUN = function(bird){
-    
+ 
     print(bird) 
     
     nmRas <- eval(parse(text=paste("sim$birdRasters$", bird, sep = "")))
-    map1D <- eval(parse(text=paste("sim$for1DMaps$", bird, sep = "")))
-    map2D <- eval(parse(text=paste("sim$for2DMaps$", bird, sep = "")))
+    map1D <- eval(parse(text=paste("sim$for1DAndLc1DMaps$", bird, sep = "")))
+    map2D <- eval(parse(text=paste("sim$for2DAndLc1DMaps$", bird, sep = "")))
     
     
     valsNM <- as.data.table(terra::values(nmRas, dataframe = FALSE)) 
@@ -595,7 +597,7 @@ examine2D <- function(sim) {
   })
   
   sim$spearmanStats <- do.call(rbind, spearmanStats)
-  
+ 
   fileName <- "spearmanStats.csv"
   write.csv(sim$spearmanStats, file =  file.path(outputFolderBirdPreds, fileName))
   
@@ -605,9 +607,9 @@ examine2D <- function(sim) {
   #get tables of residuals
   print("get resTabs")
   sim$resTabs <- lapply(X = birdList, FUN = function(bird){
-    
-    ras1D <- eval(parse(text=paste("sim$for1DRes$", bird, sep = "")))
-    ras2D <- eval(parse(text=paste("sim$for2DRes$", bird, sep = "")))
+   
+    ras1D <- eval(parse(text=paste("sim$for1DAndLc1DRes$", bird, sep = "")))
+    ras2D <- eval(parse(text=paste("sim$for2DAndLc1DRes$", bird, sep = "")))
     
     resVals1D <- as.data.table(terra::values(ras1D, dataframe = FALSE)) 
     resVals1D <- setnames( resVals1D,  "resVals")
@@ -638,8 +640,8 @@ examine2D <- function(sim) {
   print("get residual stats")
   residualStats <- lapply(X = P(sim)$birdList, FUN = function(bird){
     
-    res1D <- eval(parse(text=paste("sim$for1DRes$", bird, sep = "")))
-    res2D <- eval(parse(text=paste("sim$for2DRes$", bird, sep = "")))
+    res1D <- eval(parse(text=paste("sim$for1DAndLc1DRes$", bird, sep = "")))
+    res2D <- eval(parse(text=paste("sim$for2DAndLc1DRes$", bird, sep = "")))
     
     m1D <- median(terra::values(res1D, dataframe = FALSE), na.rm = TRUE)
     m2D <- median(terra::values(res2D, dataframe = FALSE), na.rm = TRUE)

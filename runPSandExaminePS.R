@@ -21,12 +21,12 @@ simPaths <- getPaths()
 
 
 #parameters from local
-birdList <- sort(c("CAWA", "OVEN"))
+#birdList <- sort(c("ALFL", "AMGO"))
 #new AB study Area bird list (25% prob of occurrence in 1% of the area)
-# birdList <- sort(c("ALFL", "AMGO", "AMRO", "BARS", "BBWA", "BCCH", "BHCO", "BOCH", 
-#                    "BRBL", "BRCR", "CCSP", "CEDW", "CHSP", "CLSW", "CMWA", "COYE",
-#                    "DEJU", "GCKI", "GRAJ", "HETH", "HOWR", "LEFL", "MOWA", "OVEN",
-#                    "PAWA", "RBNU", "RCKI", "REVI", "SWTH", "TEWA", "YRWA"))
+birdList <- sort(c("ALFL", "AMGO", "AMRO", "BARS", "BBWA", "BCCH", "BHCO", "BOCH",
+                   "BRBL", "BRCR", "CCSP", "CEDW", "CHSP", "CLSW", "CMWA", "COYE",
+                   "DEJU", "GCKI", "GRAJ", "HETH", "HOWR", "LEFL", "MOWA", "OVEN",
+                   "PAWA", "RBNU", "RCKI", "REVI", "SWTH", "TEWA", "YRWA"))
 
 rasterToMatchLocation <- inputsDir
 rasterToMatchName <- "LCC2005_V1_4a.tif"
@@ -56,7 +56,7 @@ simParams <- list(
              .saveInitialTime = 1,
              fromDrive = FALSE,
              classOnly = FALSE,
-             nTrees = 10, #5000
+             nTrees = 5000,
              ageGrouping = 20,
              maxAgeClass = 10,
              birdList = birdList,
