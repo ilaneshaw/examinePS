@@ -142,7 +142,7 @@ doEvent.examinePS = function(sim, eventTime, eventType) {
                              moduleName = "examinePS", eventType = "examine1D")
         sim <- scheduleEvent(sim, eventTime = P(sim)$doPredsInitialTime,
                              moduleName = "examinePS", eventType = "examine2D")
-        # sim <- scheduleEvent(sim, P(sim)$.plotInitialTime, "PS", "plot")
+        sim <- scheduleEvent(sim, P(sim)$.plotInitialTime, "PS", "plot")
         # sim <- scheduleEvent(sim, P(sim)$.saveInitialTime, "PS", "save")
       }
       
@@ -157,7 +157,7 @@ doEvent.examinePS = function(sim, eventTime, eventType) {
       # schedule future event(s)
 
       # e.g.,
-      #sim <- scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "examinePS", "plot")
+      sim <- scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "examinePS", "plot")
 
       # ! ----- STOP EDITING ----- ! #
     },
@@ -237,10 +237,33 @@ Save <- function(sim) {
 plotFun <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
   # do stuff for this event
-  sampleData <- data.frame("TheSample" = sample(1:10, replace = TRUE))
-  Plots(sampleData, fn = ggplotFn) # needs ggplot2
+  # sampleData <- data.frame("TheSample" = sample(1:10, replace = TRUE))
+  # Plots(sampleData, fn = ggplotFn) # needs ggplot2
 
-  # ! ----- STOP EDITING ----- ! #
+  lapply(P(sim)$birdList, FUN= function(bird){
+    browser()
+    
+    nmRas <- eval(parse(text=paste("sim$birdRasters$", bird, sep = "")))
+    mapRas1D <- eval(parse(text=paste("sim$for1DAndNf1DMaps$", bird, sep = "")))
+    resRas1D <- eval(parse(text=paste("sim$for1DAndNf1DRes$", bird, sep = "")))
+    mapRas2D <- eval(parse(text=paste("sim$for2DAndNf1DMaps$", bird, sep = "")))
+    resRas2D <- eval(parse(text=paste("sim$for2DAndNf1DRes$", bird, sep = "")))
+    
+    clearPlot()  
+    Plot(nmRas, title = paste("BAM Bird Density Prediction Model for ", bird, sep= ""), na.color="white", range = r.range, col = cbPalette, axes=FALSE, box=FALSE, legend = FALSE, cex.main = 1.5 ) 
+    Plot(mapRas1D, title = paste("1D Mapped Predictions for ", bird, sep = ""), na.color="white")
+    Plot(resRas1D, title = paste("1D Residuals for ", bird, sep = ""), na.color ="white")
+    
+    clearPlot()
+    Plot(nmRas, title = paste("BAM Bird Density Prediction Model for ", bird, sep= ""), na.color="white", range = r.range, col = cbPalette, axes=FALSE, box=FALSE, legend = FALSE, cex.main = 1.5 ) 
+    Plot(mapRas2D, title = paste("2D Mapped Predictions for ", bird, sep = ""), na.color="white")
+    Plot(resRas2D, title = paste("2D Residuals for ", bird, sep = ""), na.color ="white") 
+    
+   
+  })
+
+
+# ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
 }
 
