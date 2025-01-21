@@ -172,9 +172,9 @@ moranStats <- as.data.table(moranStats)
 #1D vs 2D
 
 print("1D vs 2D Moran")
-saTTest_BC <- t.test(MoransI ~ smoothingType, 
+saTTest <- t.test(MoransI ~ smoothingType, 
                      data = moranStats)
-saTTest_BC
+saTTest
 
 
 

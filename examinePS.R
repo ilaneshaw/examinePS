@@ -16,7 +16,7 @@ defineModule(sim, list(
   citation = list("citation.bib"),
   documentation = list("NEWS.md", "README.md", "examinePS.Rmd"),
   reqdPkgs = list("PredictiveEcology/SpaDES.core@development (>= 2.0.2.9000)", "ggplot2", "sf", "data.table", "terra",
-                  "LandR", "googledrive", "plotrix", "ggpubr", "diptest", "nortest", "dplyr", "tidyverse", "reshape2"),
+                  "LandR", "googledrive", "plotrix", "ggpubr", "diptest", "nortest", "dplyr", "tidyverse", "reshape2", "gt", "gtExtras" ),
   parameters = bindrows(
     #defineParameter("paramName", "paramClass", value, min, max, "parameter description"),
     defineParameter(".plots", "character", "screen", NA, NA,
@@ -40,7 +40,7 @@ defineModule(sim, list(
                     "Should the rasterToMatch, studyArea and bird Rasters be found on Google Drive or a similar online source? If false, they should already be on your local computer."),
     defineParameter("classOnly", "logical", TRUE, NA, NA,
                     "do smoothing by cover class only (1D)? if FALSE smoothing will be done by forest type and age class where possible"),
-    defineParameter("maxAgeClass", "numeric", 15, NA, NA,
+    defineParameter("maxAgeClass", "numeric", 17, NA, NA,
                     "what the oldest age class will be (everything older will be included in this class)"),
     defineParameter("ageGrouping", "numeric", 10, NA, NA,
                     "how many years included per age class"),
@@ -142,7 +142,9 @@ doEvent.examinePS = function(sim, eventTime, eventType) {
                              moduleName = "examinePS", eventType = "examine1D")
         sim <- scheduleEvent(sim, eventTime = P(sim)$doPredsInitialTime,
                              moduleName = "examinePS", eventType = "examine2D")
-        sim <- scheduleEvent(sim, P(sim)$.plotInitialTime, "PS", "plot")
+        sim <- scheduleEvent(sim, eventTime = P(sim)$doPredsInitialTime,
+                             moduleName = "examinePS", eventType = "compare1D2D")
+        sim <- scheduleEvent(sim, P(sim)$.plotInitialTime, "examinePS", "plot")
         # sim <- scheduleEvent(sim, P(sim)$.saveInitialTime, "PS", "save")
       }
       
@@ -205,6 +207,22 @@ doEvent.examinePS = function(sim, eventTime, eventType) {
                            moduleName = "examinePS", eventType = "examine2D") 
       # ! ----- STOP EDITING ----- ! #
     },
+    compare1D2D = {
+      # ! ----- EDIT BELOW ----- ! #
+      # do stuff for this event
+      sim <- compare1D2D(sim)
+      # e.g., call your custom functions/methods here
+      # you can define your own methods below this `doEvent` function
+      
+      # schedule future event(s)
+      
+      # e.g.,
+      # sim <- scheduleEvent(sim, time(sim) + increment, "examinePS", "templateEvent")
+      sim <- scheduleEvent(sim, eventTime = time(sim) + P(sim)$doPredsInterval, 
+                           moduleName = "examinePS", eventType = "compare1D2D") 
+      
+      # ! ----- STOP EDITING ----- ! #
+    },
     warning(paste("Undefined event type: \'", current(sim)[1, "eventType", with = FALSE],
                   "\' in module \'", current(sim)[1, "moduleName", with = FALSE], "\'", sep = ""))
   )
@@ -241,21 +259,21 @@ plotFun <- function(sim) {
   # Plots(sampleData, fn = ggplotFn) # needs ggplot2
 
   lapply(P(sim)$birdList, FUN= function(bird){
-    browser()
     
+    print(bird)
     nmRas <- eval(parse(text=paste("sim$birdRasters$", bird, sep = "")))
-    mapRas1D <- eval(parse(text=paste("sim$for1DAndNf1DMaps$", bird, sep = "")))
-    resRas1D <- eval(parse(text=paste("sim$for1DAndNf1DRes$", bird, sep = "")))
-    mapRas2D <- eval(parse(text=paste("sim$for2DAndNf1DMaps$", bird, sep = "")))
-    resRas2D <- eval(parse(text=paste("sim$for2DAndNf1DRes$", bird, sep = "")))
+    mapRas1D <- eval(parse(text=paste("sim$for1DAndLc1DMaps$", bird, sep = "")))
+    resRas1D <- eval(parse(text=paste("sim$for1DAndLc1DRes$", bird, sep = "")))
+    mapRas2D <- eval(parse(text=paste("sim$for2DAndLc1DMaps$", bird, sep = "")))
+    resRas2D <- eval(parse(text=paste("sim$for2DAndLc1DRes$", bird, sep = "")))
     
     clearPlot()  
-    Plot(nmRas, title = paste("BAM Bird Density Prediction Model for ", bird, sep= ""), na.color="white", range = r.range, col = cbPalette, axes=FALSE, box=FALSE, legend = FALSE, cex.main = 1.5 ) 
+    Plot(nmRas, title = paste("BAM Bird Density Prediction Model for ", bird, sep= ""), na.color="white") 
     Plot(mapRas1D, title = paste("1D Mapped Predictions for ", bird, sep = ""), na.color="white")
     Plot(resRas1D, title = paste("1D Residuals for ", bird, sep = ""), na.color ="white")
     
     clearPlot()
-    Plot(nmRas, title = paste("BAM Bird Density Prediction Model for ", bird, sep= ""), na.color="white", range = r.range, col = cbPalette, axes=FALSE, box=FALSE, legend = FALSE, cex.main = 1.5 ) 
+    Plot(nmRas, title = paste("BAM Bird Density Prediction Model for ", bird, sep= ""), na.color="white")
     Plot(mapRas2D, title = paste("2D Mapped Predictions for ", bird, sep = ""), na.color="white")
     Plot(resRas2D, title = paste("2D Residuals for ", bird, sep = ""), na.color ="white") 
     
@@ -549,7 +567,8 @@ examine2D <- function(sim) {
   #Make residual rasters of composite 2D predictions for forClassraster areas and 1D predictions for landClassRaster areas
   print("make for2DAndLc1DRes")
   sim$for2DAndLc1DRes <- lapply(X = P(sim)$birdList, FUN = function(bird){
-    
+    print(bird)
+  
     NM <- eval(parse(text=paste("sim$birdRasters$", bird, sep = "")))
     PS <- eval(parse(text=paste("sim$for2DAndLc1DMaps$", bird, sep = "")))
     res <- NM - PS
@@ -686,6 +705,105 @@ examine2D <- function(sim) {
   
   head(sim$residualStats)
   
+  
+  # ! ----- STOP EDITING ----- ! #
+  return(invisible(sim))
+}
+
+compare1D2D <- function(sim) {
+  # ! ----- EDIT BELOW ----- ! #
+  # THE NEXT TWO LINES ARE FOR DUMMY UNIT TESTS; CHANGE OR DELETE THEM.
+  # sim$event1Test1 <- " this is test for event 1. " # for dummy unit test
+  # sim$event1Test2 <- 999 # for dummy unit test
+
+  
+  #COMPARE UNIMODALITY AND NORMALITY
+  names(sim$assumptionsByClass1D)[names(sim$assumptionsByClass1D) == 'landForClass'] <- 'landAgeClass'
+  sim$assumptionsByClass1D <- sim$assumptionsByClass1D[1:6]
+  sim$assumptionsByClass1D  <- droplevels(sim$assumptionsByClass1D)
+  # assumptionsByClass1D_land <- assumptionsByClass1D[1:6]
+  # assumptionsByClass1D_land  <- droplevels(assumptionsByClass1D_land)
+  assumptionsByClass <- rbind(sim$assumptionsByClass1D, sim$assumptionsByClass2D)
+  #assumptionsByClass <- assumptionsByClass[,2:5]
+  assumptionsByClass$smoothingType <- as.factor(assumptionsByClass$smoothingType)
+  assumptionsByClass$landAgeClass <- as.factor(assumptionsByClass$landAgeClass)
+  
+  #get summaries
+  print("assumptions by class 1D summary")
+  summary(sim$assumptionsByClass1D)
+  #gt_plt_summary(sim$assumptionsByClass1D)
+  sdUnimodality_1D <- sd(sim$assumptionsByClass1D$propBirdsUnimodal)
+  sdUnimodality_2D <- sd(sim$assumptionsByClass2D$propBirdsUnimodal)
+  sdNormality_1D <- sd(sim$assumptionsByClass1D$propBirdsNormal)
+  sdNormality_2D <- sd(sim$assumptionsByClass2D$propBirdsNormal)
+  sim$sdAssumptions <- data.table(sdUnimodality_1D, sdUnimodality_2D, sdNormality_1D, sdNormality_2D)
+  print(sim$sdAssumptions)
+  
+  print("assumptions by class 2D summary")
+  summary(sim$assumptionsByClass2D)
+  #gt_plt_summary(sim$assumptionsByClass2D)
+  
+  #COMPARE 1D vs 2D  UNIMODALITY
+  print("1D vs 2D unimodality")
+  sim$unimodalityTTest <- t.test(propBirdsUnimodal ~ smoothingType, 
+                             data = assumptionsByClass)
+  print(sim$unimodalityTTest)
+  
+  #COMPARE 1D vs 2D  NORMALITY
+  print("1D vs 2D normality")
+  sim$normalityTTest <- t.test(propBirdsNormal ~ smoothingType, 
+                               data = assumptionsByClass)
+  print(sim$normalityTTest)
+  
+  
+  
+  #COMPARE SIMILARITY BETWEEN NM AND PS RASTERS FOR 1D VS 2D (SPEARMAN RANK)
+  sim$spearmanStats <- as.data.frame(sim$spearmanStats)
+  print("spearman stats summary")
+  print(summary(sim$spearmanStats))
+  #gt_plt_summary(sim$spearmanStats)
+  sdSpearman1D <- sd(sim$spearmanStats$spearman1D)
+  sdSpearman2D <- sd(sim$spearmanStats$spearman2D)
+  sim$sdSpearman <- data.table(sdSpearman1D, sdSpearman2D)
+  print(sim$sdSpearman)
+  
+  #names(sim$spearmanStats) <- c("birdSp", "spearman1D", "spearman2D")
+  #spearmanStats$ageClasses <- as.numeric(spearmanStats$ageClasses)
+  spearmanTab <- gather(data=sim$spearmanStats, key="smoothingType", value="spearmanStat")
+  #spearmanStats <- unite(spearmanStats, dataset, c(binningType, ageClasses), remove=FALSE)
+  spearmanTab <-na.omit(spearmanTab)
+  spearmanTab<- as.data.table(spearmanTab)
+  
+  
+  #1D vs 2D correlation
+  print("compare 1D vs 2D spearman")
+  sim$corrTTest <- t.test(spearmanStat ~ smoothingType,
+                      data = spearmanTab)
+  print(sim$corrTTest)
+  
+  
+  #COMPARE SPATIAL AUTOCORRELATION OF RESIDUALS
+  #names(sim$residualStats) <- c("birdSp", "medianRes1D", "medianRes2D","moran1D", "moran2D")
+  sim$residualStats <- data.table(sim$residualStats)
+  moranStats <- sim$residualStats[,c(3:4)]
+  print("moran stats summary")
+  print(summary(moranStats))
+  sdMoran1D <- sd(moranStats$autocor1DRes)
+  sdMoran2D <- sd(moranStats$autocor2DRes)
+  sim$sdMoran <- data.table(sdMoran1D, sdMoran2D)
+  print(sim$sdMoran)
+  #gt_plt_summary(moranStats)
+  moranStats <- gather(data=moranStats, key="smoothingType", value="MoransI")
+  moranStats <-na.omit(moranStats)
+  moranStats <- as.data.table(moranStats)
+ 
+  
+  #1D vs 2D spatial autocorrelation of residuals
+  
+  print("compare 1D vs 2D Moran")
+  sim$saTTest <- t.test(MoransI ~ smoothingType, 
+                       data = moranStats)
+  print(sim$saTTest)
   
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))

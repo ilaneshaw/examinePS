@@ -21,12 +21,11 @@ simPaths <- getPaths()
 
 
 #parameters from local
-#birdList <- sort(c("ALFL", "AMGO"))
-#new AB study Area bird list (25% prob of occurrence in 1% of the area)
-birdList <- sort(c("ALFL", "AMGO", "AMRO", "BARS", "BBWA", "BCCH", "BHCO", "BOCH",
-                   "BRBL", "BRCR", "CCSP", "CEDW", "CHSP", "CLSW", "CMWA", "COYE",
-                   "DEJU", "GCKI", "GRAJ", "HETH", "HOWR", "LEFL", "MOWA", "OVEN",
-                   "PAWA", "RBNU", "RCKI", "REVI", "SWTH", "TEWA", "YRWA"))
+#birdList <- sort(c("CAWA", "DEJU"))
+#new AB study Area bird list (25% prob of occurrence in 1% of the area, only those with 32 replicates)
+birdList <- sort(c("ALFL", "BBWA", "BCCH", "BOCH", "BRCR", "CMWA", "COYE",
+                  "DEJU", "GCKI", "GRAJ",  "LEFL", "MOWA", "OVEN", "PAWA",
+                 "RBNU", "RCKI", "REVI", "SWTH", "TEWA", "YRWA"))
 
 rasterToMatchLocation <- inputsDir
 rasterToMatchName <- "LCC2005_V1_4a.tif"
@@ -57,8 +56,8 @@ simParams <- list(
              fromDrive = FALSE,
              classOnly = FALSE,
              nTrees = 5000,
-             ageGrouping = 20,
-             maxAgeClass = 10,
+             ageGrouping = 10,
+             maxAgeClass = 17,
              birdList = birdList,
              #folderUrlBirdRaster = folderUrlBirdRaster,
              .studyAreaName = .studyAreaName,
@@ -88,7 +87,7 @@ simParams <- list(
 
 
 ## Simulation setup
-mySim <- simInit(times = simTimes, params = simParams, 
+mySim <- simInit(times = simTimes, params = simParams,
                  modules = simModules, paths = simPaths)
 
 test <- spades(mySim)
