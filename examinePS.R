@@ -318,7 +318,7 @@ examine1D <- function(sim) {
   #we make assumption that if there is an NA, it is not normal/unimodal
   assumpTab1D$normal[is.na(assumpTab1D$normal) == TRUE] <- 0
   assumpTab1D$unimodal[is.na(assumpTab1D$unimodal) == TRUE] <- 0
-  sim$assumpTab1D < sim$assumpTab1D
+  
   
   #save tab for furture graphs comparing with 2D assumptions
   write.csv(sim$assumpTab1D, file =  file.path(outputFolderBirdPreds, "assumpTab1D.csv"))
@@ -502,15 +502,15 @@ examine2D <- function(sim) {
   #Get table of binary normality and unimodality 
   assumpTab2D <- birdStats2DSingleFrame[,c(1,7,8,9)]
   assumpTab2D$normal <- NA
-  assumpTab2D$normal[assumpTab2D$normality < 0.05] <- 0
-  assumpTab2D$normal[assumpTab2D$normality == 0.05] <- 0
-  assumpTab2D$normal[assumpTab2D$normality > 0.05] <- 1
+  assumpTab2D$normal[assumpTab2D$normality > 0.05] <- 0
+  assumpTab2D$normal[assumpTab2D$normality == 0.05] <- 1
+  assumpTab2D$normal[assumpTab2D$normality < 0.05] <- 1
   
   
   assumpTab2D$unimodal <- NA
-  assumpTab2D$unimodal[assumpTab2D$unimodality < 0.05] <- 0
-  assumpTab2D$unimodal[assumpTab2D$unimodality == 0.05] <- 0
-  assumpTab2D$unimodal[assumpTab2D$unimodality > 0.05] <- 1
+  assumpTab2D$unimodal[assumpTab2D$unimodality > 0.05] <- 0
+  assumpTab2D$unimodal[assumpTab2D$unimodality == 0.05] <- 1
+  assumpTab2D$unimodal[assumpTab2D$unimodality < 0.05] <- 1
   assumpTab2D <- assumpTab2D[,c(1,4,5,6)]
   assumpTab2D
   write.csv(assumpTab2D, file =  file.path(outputFolderBirdPreds, "assumpTab2D.csv"))
