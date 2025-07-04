@@ -8,7 +8,7 @@ defineModule(sim, list(
   name = "examinePS",
   description = "",
   keywords = "",
-  authors = structure(list(list(given = c("Isolde"), family = "Lane-Shaw", role = c("aut", "cre"), email = "email@example.com", comment = NULL)), class = "person"),
+  authors = structure(list(list(given = c("Isolde"), family = "Lane-Shaw", role = c("aut", "cre"), email = "RALAS6@ulaval.ca", comment = NULL)), class = "person"),
   childModules = character(0),
   version = list(examinePS = "0.0.0.9000"),
   timeframe = as.POSIXlt(c(NA, NA)),
@@ -668,6 +668,7 @@ examine2D <- function(sim) {
     resVals <- rbind(resVals1D, resVals2D)
     birdSp <- rep(paste(bird), nrow(resVals))
     resVals <- cbind(resVals, birdSp = birdSp)
+    resVals[, absResVals := abs(resVals)]
     print(resVals)
     
     #save table
@@ -682,16 +683,29 @@ examine2D <- function(sim) {
   print("get residual stats")
   residualStats <- lapply(X = P(sim)$birdList, FUN = function(bird){
     
+    nmRas <- eval(parse(text=paste("sim$birdRasters$", bird, sep = "")))
     res1D <- eval(parse(text=paste("sim$for1DAndLc1DRes$", bird, sep = "")))
     res2D <- eval(parse(text=paste("sim$for2DAndLc1DRes$", bird, sep = "")))
+    
+    resTab <- eval(parse(text=paste("sim$resTabs$", bird, sep = "")))
+    absResStats <- resTab[,list(medResAbs = median(absResVals),
+                                maxResAbs = max(absResVals)),
+                          by = binningType]
     
     m1D <- median(terra::values(res1D, dataframe = FALSE), na.rm = TRUE)
     m2D <- median(terra::values(res2D, dataframe = FALSE), na.rm = TRUE)
     sa1D  <- terra::autocor(res1D, method = "moran")
     sa2D  <- terra::autocor(res2D, method = "moran")
+    m1DAbs <- absResStats[binningType == "res1D"]$medResAbs
+    m2DAbs <- absResStats[binningType == "res2D"]$medResAbs
+    max1DAbs <- absResStats[binningType == "res1D"]$maxResAbs
+    max2DAbs <- absResStats[binningType == "res2D"]$maxResAbs
+    mNM <- median(terra::values(nmRas, dataframe = FALSE), na.rm = TRUE)
+    medAbsProp1D <- m1DAbs/mNM
+    medAbsProp2D <- m2DAbs/mNM
     
-    residualStats <- matrix(c( m1D, m2D,  sa1D, sa2D), ncol= 4, byrow=TRUE)
-    colnames(residualStats) <- c( 'median1DRes', 'median2DRes', "autocor1DRes", "autocor2DRes")
+    residualStats <- matrix(c( m1D, m2D,  sa1D, sa2D, m1DAbs, m2DAbs, max1DAbs, max2DAbs, mNM, medAbsProp1D, medAbsProp2D), ncol= 11, byrow=TRUE)
+    colnames(residualStats) <- c( 'median1DRes', 'median2DRes', "autocor1DRes", "autocor2DRes", 'median1DResAbs', 'median2DResAbs', 'max1DResAbs', 'max2DResAbs', "nmMedian", "propOfNM1DMed", "propOfNM2DMed")
     row.names(residualStats) <- bird
     print(paste(bird, " calculation complete"))
     return(residualStats)
