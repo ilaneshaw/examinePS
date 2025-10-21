@@ -50,7 +50,7 @@ colours1D2D <- coloursViridis[c(10,3)]
 colours2D <- coloursViridis[3]
 
 
-outputsDir <- checkPath("../../outputs", create = TRUE)
+outputsDir <- checkPath("../../outputs/9x20yrAgeClasses", create = TRUE)
 inputsDir <- checkPath("../../inputs", create = TRUE)
 rasterToMatchLocation <- file.path(inputsDir, "LCC2005_V1_4a.tif")
 ### STUDY AREA ONE DETAILS
