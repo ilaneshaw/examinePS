@@ -24,7 +24,7 @@ library(tidyr)
 library(RColorBrewer)
 library(dplyr)
 library(forcats)
-library(hrbrthemes)
+# library(hrbrthemes)
 library(viridis)
 library(naniar)
 library(raster)
@@ -61,7 +61,7 @@ saveLocation <- checkPath(file.path(Paths$outputPath, "PS/PSFigs"), create = TRU
 rasterToMatchLocation <- file.path(Paths$inputPath, "ALFL-meanBoot_BCR-60_studyArea_AB_BCR6")
 
 .studyAreaName <- "studyArea_AB_BCR6.shp"
-studyAreaLocation <- file.path(Paths$inputPath, "studyArea/studyArea_AB_BCR6", .studyAreaName)
+studyAreaLocation <- file.path(Paths$inputPath, "studyArea/PiecewiseSmoothing/studyArea_AB_BCR6", .studyAreaName)
 
 locationLandscapeRasters <- file.path(Paths$inputPath, "landscapeRasters")
 
@@ -489,16 +489,16 @@ ageDistribution <- ggplot(
   ) +
   scale_y_continuous(breaks = pretty_breaks()) +
   theme(
-    title = element_text(size = 11),
-    strip.text.x = element_text(size = 10),
-    strip.text.y = element_text(size = 10),
+    title = element_text(size = 14),
+    strip.text.x = element_text(size = 12),
+    strip.text.y = element_text(size = 12),
     strip.background = element_rect(
       color = "white", fill = "white", linewidth = 1.5
     ),
-    axis.text.y = element_text(size = 8),
-    axis.text.x = element_text(size = 8, angle = 45, hjust = 1),
-    axis.title.y = element_text(size = 10),
-    axis.title.x = element_text(size = 10),
+    axis.text.y = element_text(size = 10),
+    axis.text.x = element_text(size = 10, angle = 45, hjust = 1),
+    axis.title.y = element_text(size = 12),
+    axis.title.x = element_text(size = 12),
     legend.title = element_blank(),
     legend.text = element_blank(),
     plot.margin = margin(0, 0, 0.5, 0.3, "cm"),
@@ -514,7 +514,7 @@ ageDistribution
 
 
 ageStats <- forClassDat[
-  order(landForClass)
+  base::order(landForClass)
   # order the rows by the land cover class
 ][, list(
   classCount = .N,
@@ -572,18 +572,18 @@ plotMeanAgeByClass <- ggplot(
     "forClass_6" = "White \nSpruce"
   )) +
   theme(
-    title = element_text(size = 11),
-    strip.text.x = element_text(size = 10),
-    strip.text.y = element_text(size = 10),
+    title = element_text(size = 14),
+    strip.text.x = element_text(size = 12),
+    strip.text.y = element_text(size = 12),
     strip.background = element_rect(
       color = "white", fill = "white", linewidth = 1.5
     ),
-    axis.text.y = element_text(size = 8),
-    axis.text.x = element_text(size = 8, angle = 45, hjust = 1),
-    axis.title.y = element_text(size = 10),
+    axis.text.y = element_text(size = 10),
+    axis.text.x = element_text(size = 10, angle = 45, hjust = 1),
+    axis.title.y = element_text(size = 12),
     axis.title.x = element_blank(),
     legend.title = element_blank(),
-    legend.text = element_text(size = 8),
+    legend.text = element_text(size = 10),
     plot.margin = margin(0, 0.5, 0, 0, "cm"),
     legend.position = "none"
   )
@@ -608,21 +608,38 @@ ggsave(file.path(saveLocation, "landscapeSummary.jpeg"), landscapeSummary, width
 
 
 ```{r singleStudyAreaLandscapeRasterMaps, echo=FALSE}
+is <- c(1, 2, 3, 4, 5, 6)
+becomes <- c(11, 12, 7, 8, 9, 10)
+reclassMatrixFcr <- matrix(c(is, becomes),
+                 ncol=2,
+                 byrow = FALSE)
+print(reclassMatrixFcr)
+forClassRaster <- terra::classify(forClassRaster, reclassMatrixFcr)
+
+
 # reclassify to Class Names
-fcrValue <- c(1, 2, 3, 4, 5, 6)
-fcrLabel <- c("1", "2", "3", "4", "5", "6")
-fcrLabelReclass <- c("Black Spruce", "Black Spruce Wet", "Deciduous", "Mixed", "Pine", "White Spruce")
+fcrValue <- c(7, 8, 9, 10, 11, 12)
+fcrLabel <- c("7", "8", "9", "10", "11", "12")
+fcrLabelReclass <- c("Deciduous", "Mixed", "Pine", "White Spruce", "Black Spruce", "Black Spruce Wet")
 fcrReclassified <- data.frame(fcrValue, fcrLabel, fcrLabelReclass)
 fcrReclassified$fcrLabelReclass <- as.factor(fcrReclassified$fcrLabelReclass)
 print(fcrReclassified)
 str(fcrReclassified)
 
 forClassRaster <- categories(forClassRaster, value = fcrReclassified, active = 2)
+is <- c(0, 1, 2, 3, 4, 5, 6)
+becomes <- c(13, 7, 8, 9, 10, 11, 12)
+reclassMatrixLcr <- matrix(c(is, becomes),
+                 ncol=2,
+                 byrow = FALSE)
+print(reclassMatrixLcr)
+landClassRaster <- terra::classify(landClassRaster, reclassMatrixLcr)
+
 
 # reclassify to Class Names
-lcrValue <- c(0, 1, 2, 3, 4, 5, 6)
-lcrLabel <- c("0", "1", "2", "3", "4", "5", "6")
-lcrLabelReclass <- c("Unmanaged Forest", "Water/Ice", "Wetland", "Anthro/Explosed Land", "Grass/Cropland", "Shrub", "Bryoid")
+lcrValue <- c(13, 7, 8, 9, 10, 11, 12)
+lcrLabel <- c("13", "7", "8", "9", "10", "11", "12")
+lcrLabelReclass <- c("Unmanaged Forest", "Water/Ice", "Wetland", "Anthro/Exposed Land", "Grass/Cropland", "Shrub", "Bryoid")
 lcrReclassified <- data.frame(lcrValue, lcrLabel, lcrLabelReclass)
 lcrReclassified$lcrLabelReclass <- as.factor(lcrReclassified$lcrLabelReclass)
 print(lcrReclassified)
@@ -649,22 +666,50 @@ studyArea <- terra::project(studyArea, y = "+proj=longlat +datum=WGS84")
 forClassRaster <- terra::project(forClassRaster, y = "+proj=longlat +datum=WGS84")
 forClassRaster <- crop(forClassRaster, studyArea)
 
-cbPalette2 <- c("#56B4E9", "#0072B2", "#009E73", "#E69F00", "#999999", "black")
-plot(forClassRaster, main = "Forest Class Raster", legend = TRUE, col = cbPalette2, colNA = "white", axes = FALSE, box = FALSE)
-# legend("bottomright", legend = c( "Black Spruce", "Black Spruce Wet", "Conifer Mix", "Deciduous", "Mixed", "Pine", "White Spruce"), fill = cbPalette)
+classPal <- c(
+  "#3C6987FF", "#87A5A5FF", "#4B3C4BFF", "#2D3C5AFF",
+  "#D2D2C3FF", "#A5A587FF", "#B4783CFF", "#D2A54BFF",
+  "#B4B45AFF", "#78963CFF", "#1E4B3CFF", "#5A695AFF"
+)
 
+classPalLc <- c(
+  "#3C6987FF", "#87A5A5FF", "#4B3C4BFF", "#2D3C5AFF",
+  "#D2D2C3FF", "#A5A587FF")
+classPalFc <- c( "#B4783CFF", "#D2A54BFF",
+  "#B4B45AFF", "#78963CFF", "#1E4B3CFF", "#5A695AFF"
+)
+
+cbPalette2 <- c("#56B4E9", "#0072B2", "#009E73", "#E69F00", "#999999", "black")
+#cbPalette1 <- c( "#3C6987FF", "#87A5A5FF", "#4B3C4BFF", "#2D3C5AFF",
+#  "#D2D2C3FF", "#A5A587FF")
+#cbPalette2 <- c( "#B4783CFF", "#D2A54BFF",
+#  "#B4B45AFF", "#78963CFF", "#1E4B3CFF", "#5A695AFF")
+
+
+
+op <- par(cex = 2) # change legend text size
+plot(forClassRaster, main = "Forest Class Raster", legend = TRUE, col = classPalFc, colNA = "white", axes = FALSE, box = FALSE)
+# legend("bottomright", legend = c( "Black Spruce", "Black Spruce Wet", "Conifer Mix", "Deciduous", "Mixed", "Pine", "White Spruce"), fill = cbPalette)
+plot(forClassRaster, legend = TRUE, col = classPalFc, colNA = "white", axes = FALSE, box = FALSE)
 
 landClassRaster <- terra::project(landClassRaster, y = "+proj=longlat +datum=WGS84")
 landClassRaster <- crop(landClassRaster, studyArea)
 
 plot(landClassRaster, main = "Land-Cover Class Raster", legend = TRUE, col = cbPalette2, colNA = "white", axes = FALSE, box = FALSE)
 
+plot(landClassRaster, main = "Land-Cover Class Raster", legend = TRUE, col = classPalLc, colNA = "white", axes = FALSE, box = FALSE)
 
+plot(landClassRaster, legend = TRUE, col = classPalLc, colNA = "white", axes = FALSE, box = FALSE)
 
 ageRaster <- terra::project(ageRaster, y = "+proj=longlat +datum=WGS84")
 ageRaster <- crop(ageRaster, studyArea)
 
-plot(ageRaster, main = "Age Raster", colNA = "white", axes = FALSE, box = FALSE)
+pal <- colorRampPalette(c("#D2D2C3FF","#A5A587FF","#78963CFF", "#1E4B3CFF", "black"))
+
+
+plot(ageRaster, main = "Age Raster", colNA = "white", axes = FALSE, box = FALSE, col = pal(75)) 
+
+plot(ageRaster, colNA = "white", axes = FALSE, box = FALSE, col = pal(75))
 ```
 
 
@@ -672,11 +717,11 @@ plot(ageRaster, main = "Age Raster", colNA = "white", axes = FALSE, box = FALSE)
 
 ### Sp Info Table
 ```{r spInfo, echo=FALSE}
-commonName <- c("Alder Flycatcher", "Bay-breasted Warbler", "Black-capped Chickadee", "Boreal Chickadee", "Brown Creeper", "Cape May Warbler", "Common Yellowthroat", "Dark-eyed Junco", "Golden-crowned Kinglet", "Canada Jay", "Least Flycatcher", "Mourning Warbler", "Ovenbird", "Palm Warbler", "Red-breasted Nuthatch", "Ruby-crowned Kinglet", "Red-eyed Vireo", "Swainson’s Thrush", "Tennessee Warbler", "Yellow-rumped Warbler")
+commonName <- c("Alder Flycatcher", "Bay-breasted Warbler", "Black-capped Chickadee", "Boreal Chickadee", "Brown Creeper", "Canada Jay", "Cape May Warbler", "Common Yellowthroat", "Dark-eyed Junco", "Golden-crowned Kinglet", "Least Flycatcher", "Mourning Warbler", "Ovenbird", "Palm Warbler", "Red-breasted Nuthatch", "Ruby-crowned Kinglet", "Red-eyed Vireo", "Swainson’s Thrush", "Tennessee Warbler", "Yellow-rumped Warbler")
 
 scientificName <- c(
-  "Empidonax alnorum", "Setophaga castanea", "Poecile atricapillus", "Poecile hudsonicus", "Certhia americana", "Setophaga tigrina", "Geothlypis trichas",
-  "Junco hyemalis", "Regulus satrapa", "Perisoreus canadensis", "Empidonax minimus", "Geothlypis philadelphia", "Seiurus aurocapilla", "Setophaga palmarum", "Sitta canadensis", "Regulus calendula", "Vireo olivaceus", "Catharus ustulatus", "Leiothlypis peregrina", "Setophaga coronata"
+  "Empidonax alnorum", "Setophaga castanea", "Poecile atricapillus", "Poecile hudsonicus", "Certhia americana", "Perisoreus canadensis", "Setophaga tigrina", "Geothlypis trichas",
+  "Junco hyemalis", "Regulus satrapa", "Empidonax minimus", "Geothlypis philadelphia", "Seiurus aurocapilla", "Setophaga palmarum", "Sitta canadensis", "Regulus calendula", "Vireo olivaceus", "Catharus ustulatus", "Leiothlypis peregrina", "Setophaga coronata"
 )
 
 spInfo <- data.frame(commonName, scientificName)
@@ -777,18 +822,18 @@ spPreds1DSingleFrame <- rbindlist(spPreds1D)
 
 sp.labs <- c(
   "Alder Flycatcher", "Bay-breasted Warbler", "Black-capped Chickadee",
-  "Boreal Chickadee", "Brown Creeper", "Cape May Warbler",
+  "Boreal Chickadee", "Brown Creeper", "Canada Jay", "Cape May Warbler",
   "Common Yellowthroat", "Dark-eyed Junco", "Golden-crowned Kinglet",
-  "Canada Jay", "Least Flycatcher", "Mourning Warbler",
+  "Least Flycatcher", "Mourning Warbler",
   "Ovenbird", "Palm Warbler", "Red-breasted Nuthatch",
   "Ruby-crowned Kinglet", "Red-eyed Vireo", "Swainson’s Thrush",
   "Tennessee Warbler", "Yellow-rumped Warbler"
 )
 names(sp.labs) <- c(
   "ALFL", "BBWA", "BCCH",
-  "BOCH", "BRCR", "CMWA",
-  "COYE", "DEJU", "GCKI",
-  "GRAJ", "LEFL", "MOWA",
+  "BOCH", "BRCR", "GRAJ",
+  "CMWA", "COYE", "DEJU",
+  "GCKI", "LEFL", "MOWA",
   "OVEN", "PAWA", "RBNU",
   "RCKI", "REVI", "SWTH",
   "TEWA", "YRWA"
@@ -1128,6 +1173,7 @@ speciesInOrder <- unique(dataFrameForGraph$species)
 # make dataframe of sps you want to include
 # spsWanted <- c(speciesInOrder[1:10])
 spsWanted <- speciesInOrder[1:10]
+# spsWanted <- speciesInOrder[11:20]
 dataFrameForGraph <- dataFrameForGraph[dataFrameForGraph[["species"]] %in% spsWanted]
 
 # specify class level order
@@ -1468,7 +1514,7 @@ gtTabs$OVEN
 
 # get matricies
 lapply(spList, FUN = function(sp) {
-  # browser()
+  
   # sp <- "ALFL"
   print(sp)
   nameSp <- spNames[sp, ]
@@ -2000,7 +2046,7 @@ lapply(spList, FUN = function(sp) {
     )
   # browser()
   gtTab
-  # gtsave(gtTab, paste(sp, "_NormalityAndUnimodalityTests.png", sep = ""), path = saveLocation, expand = 50)
+   gtsave(gtTab, paste(sp, "_NormalityAndUnimodalityTests.png", sep = ""), path = saveLocation, expand = 50)
 
 
   #  return(spPreds1D)
@@ -2517,10 +2563,10 @@ lapply(spList, FUN = function(sp) {
 
   allRasters <- c(nmRas, mapRas_1D, resRas_1D, mapRas_2D_10, resRas_2D_10, mapRas_2D_20, resRas_2D_20, mapRas_2D_40, resRas_2D_40)
   names(allRasters) <- c(
-    "BAM Model Raster", "1D Smoothing Prediction", "1D Smoothing Residual",
-    "2D Smoothing Prediction (10-year age classes)", "2D Smoothing Residual (10 year age classes)",
-    "2D Smoothing Prediction (20-year age classes)", "2D Smoothing Residual (20 year age classes)",
-    "2D Smoothing Prediction (40-year age classes)", "2D Smoothing Residual (40 year age classes)"
+    "BAM Model Raster", "1DPS Prediction", "1DPS Residual",
+    "2DPS Prediction (10-year age classes)", "2DPS Residual (10-year age classes)",
+    "2DPS Prediction (20-year age classes)", "2DPS Residual (20-year age classes)",
+    "2DPS Prediction (40-year age classes)", "2DPS Residual (40-year age classes)"
   )
 
   studyArea <- terra::project(studyArea, y = "+proj=longlat +datum=WGS84")
@@ -2536,26 +2582,26 @@ lapply(spList, FUN = function(sp) {
   )
   allRasAsDF <- allRasAsDF %>%
     mutate(rasterType = case_when(
-      RasterName == "BAM Model Raster" ~ "BAM Model Raster",
-      RasterName == "1D Smoothing Prediction" ~ "Piecewise Smoothing Map",
-      RasterName == "2D Smoothing Prediction (10 year age classes)" ~ "Piecewise Smoothing Map",
-      RasterName == "2D Smoothing Prediction (20 year age classes)" ~ "Piecewise Smoothing Map",
-      RasterName == "2D Smoothing Prediction (40 year age classes)" ~ "Piecewise Smoothing Map",
-      RasterName == "1D Smoothing Residual" ~ "Residual",
-      RasterName == "2D Smoothing Residual (10 year age classes)" ~ "Residual",
-      RasterName == "2D Smoothing Residual (20 year age classes)" ~ "Residual",
-      RasterName == "2D Smoothing Residual (40 year age classes)" ~ "Residual",
+      RasterName == "BAM Model Raster" ~ "BAM Model",
+      RasterName == "1DPS Prediction" ~ "Piecewise Smoothing",
+      RasterName == "2DPS Prediction (10-year age classes)" ~ "Piecewise Smoothing",
+      RasterName == "2DPS Prediction (20-year age classes)" ~ "Piecewise Smoothing",
+      RasterName == "2DPS Prediction (40-year age classes)" ~ "Piecewise Smoothing",
+      RasterName == "1DPS Residual" ~ "Residual",
+      RasterName == "2DPS Residual (10-year age classes)" ~ "Residual",
+      RasterName == "2DPS Residual (20-year age classes)" ~ "Residual",
+      RasterName == "2DPS Residual (40-year age classes)" ~ "Residual",
     )) %>%
     mutate(smoothingType = case_when(
-      RasterName == "BAM Model Raster" ~ "1D Piecewise Smoothing",
-      RasterName == "1D Smoothing Prediction" ~ "1D Piecewise Smoothing",
-      RasterName == "2D Smoothing Prediction (10 year age classes)" ~ "2D Piecewise Smoothing \n(10 year age classes)",
-      RasterName == "2D Smoothing Prediction (20 year age classes)" ~ "2D Piecewise Smoothing \n(20 year age classes)",
-      RasterName == "2D Smoothing Prediction (40 year age classes)" ~ "2D Piecewise Smoothing \n(40 year age classes)",
-      RasterName == "1D Smoothing Residual" ~ "1D Piecewise Smoothing",
-      RasterName == "2D Smoothing Residual (10 year age classes)" ~ "2D Piecewise Smoothing \n(10 year age classes)",
-      RasterName == "2D Smoothing Residual (20 year age classes)" ~ "2D Piecewise Smoothing \n(20 year age classes)",
-      RasterName == "2D Smoothing Residual (40 year age classes)" ~ "2D Piecewise Smoothing \n(40 year age classes)",
+      RasterName == "BAM Model Raster" ~ "1DPS",
+      RasterName == "1DPS Prediction" ~ "1DPS",
+      RasterName == "2DPS Prediction (10-year age classes)" ~ "2DPS \n(10-year age classes)",
+      RasterName == "2DPS Prediction (20-year age classes)" ~ "2DPS \n(20-year age classes)",
+      RasterName == "2DPS Prediction (40-year age classes)" ~ "2DPS \n(40-year age classes)",
+      RasterName == "1DPS Residual" ~ "1DPS",
+      RasterName == "2DPS Residual (10-year age classes)" ~ "2DPS \n(10-year age classes)",
+      RasterName == "2DPS Residual (20-year age classes)" ~ "2DPS \n(20-year age classes)",
+      RasterName == "2DPS Residual (40-year age classes)" ~ "2DPS \n(40-year age classes)",
     ))
   # facet_grid(facet_row ~ layer, scales = "free") + # Faceting by layer and facet_row
 
@@ -2574,17 +2620,17 @@ lapply(spList, FUN = function(sp) {
       na.value = "white"
     ) +
     theme_classic() +
-    labs(title = paste(" ", nameSp, " density predictions (males/ha)", sep = "")) +
+    labs(title = paste("Predicted density (males ha⁻¹)", sep = "")) +
     theme(
-      title = element_text(size = 14),
+      title = element_text(size = 16),
       strip.text.x = element_text(
-        size = 12
+        size = 16
       ),
       strip.text.y = element_text(
-        size = 11
+        size = 16
       ),
       legend.position = "right",
-      legend.text = element_text(size = 10),
+      legend.text = element_text(size = 16),
       legend.title = element_blank(),
       legend.key.height = unit(1, "null"),
       strip.background = element_rect(
@@ -2600,6 +2646,6 @@ lapply(spList, FUN = function(sp) {
 
   rasterPlot
 
-  ggsave(file.path(paste(saveLocation, "/", sp, "_rasterPlots.jpeg", sep = "")), rasterPlot, width = 22, height = 45, units = "cm")
+  ggsave(file.path(paste(saveLocation, "/", sp, "_rasterPlots.jpeg", sep = "")), rasterPlot, width = 22, height = 35, units = "cm")
 })
 ```

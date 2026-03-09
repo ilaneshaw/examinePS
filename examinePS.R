@@ -726,7 +726,7 @@ compare1D2D <- function(sim) {
   # sim$event1Test1 <- " this is test for event 1. " # for dummy unit test
   # sim$event1Test2 <- 999 # for dummy unit test
 
-  browser()
+
   # COMPARE UNIMODALITY AND NORMALITY
   names(sim$assumptionsByClass1D)[names(sim$assumptionsByClass1D) == "landForClass"] <- "landAgeClass"
   sim$assumptionsByClass1D <- sim$assumptionsByClass1D[1:6]
