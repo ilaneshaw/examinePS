@@ -1,8 +1,10 @@
-After knitting and rendering `examinePS.Rmd`, overwrite this file with a symlink to `examinePS.md`.
+The PS and examinePS modules are the core modules for the piecewise smoothing method.
 
-E.g., on Linux/macOS from terminal:
+• PS: can be run separately, using the runPS.R file and provides 1DPS and 2DPS predictions and
+maps.
+• examinePS: can be run alongside the PS module using the file 
+• runPSandExaminePS.R: This file runs the PS and examinePS modules.
+• plotResults.Rmd: This code produces the figures for the Piecewise Smoothing manuscript can be
+found in examinePS. Run the SETUP sections, then run the desired sections separately.
 
-```bash
-cd C:/Users/RALAS6/Documents/Repositories/SpaDES/modules/examinePS
-rm README.md && ln -s examinePS.md README.md
-```
+It will be neccesary to install the “SpaDES” package before running any modules.
