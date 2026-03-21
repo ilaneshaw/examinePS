@@ -32,9 +32,11 @@ if (!require(dplyr)) {
 
 dir.create("figures", showWarnings = FALSE)
 
-download.file(url = "https://img.shields.io/badge/Made%20with-Markdown-1f425f.png",
-              destfile = "figures/markdownBadge.png",
-              mode = 'wb')
+download.file(
+  url = "https://img.shields.io/badge/Made%20with-Markdown-1f425f.png",
+  destfile = "figures/markdownBadge.png",
+  mode = "wb"
+)
 ```
 
 [![made-with-Markdown](figures/markdownBadge.png)](https://commonmark.org)
@@ -43,7 +45,7 @@ download.file(url = "https://img.shields.io/badge/Made%20with-Markdown-1f425f.pn
 
 #### Authors:
 
-`r paste(as.character(SpaDES.core::moduleMetadata(module = "examinePS", path = '..')$authors), sep = ', ')`
+`r paste(as.character(SpaDES.core::moduleMetadata(module = "examinePS", path = file.path("../../modules"))$authors), sep = ', ')`
 <!-- ideally separate authors with new lines, '\n' not working -->
 
 ## Module Overview
@@ -58,13 +60,14 @@ This is a template for module documentation, and should be changed to reflect yo
 ### Module inputs and parameters
 
 Describe input data required by the module and how to obtain it (e.g., directly from online sources or supplied by other modules)
-If `sourceURL` is specified, `downloadData("examinePS", "C:/Users/RALAS6/Documents/Repositories/SpaDES/modules")` may be sufficient.
+If `sourceURL` is specified, `downloadData("examinePS", file.path("../../modules"))` may be sufficient.
 Table \@ref(tab:moduleInputs-examinePS) shows the full list of module inputs.
 
 ```{r moduleInputs-examinePS, echo = FALSE, eval = TRUE, message = FALSE, warning = FALSE}
-df_inputs <- SpaDES.core::moduleInputs("examinePS", "C:/Users/RALAS6/Documents/Repositories/SpaDES/modules")
+df_inputs <- SpaDES.core::moduleInputs("examinePS", file.path("../../modules"))
 knitr::kable(df_inputs,
-             caption = "List of (ref:examinePS) input objects and their description.") %>%
+  caption = "List of (ref:examinePS) input objects and their description."
+) %>%
   kableExtra::kable_styling(latex_options = "scale_down", full_width = TRUE)
 ```
 
@@ -72,7 +75,7 @@ Provide a summary of user-visible parameters (Table \@ref(tab:moduleParams-exami
 
 
 ```{r moduleParams-examinePS, echo = FALSE, eval = TRUE, message = FALSE, warning = FALSE}
-df_params <- SpaDES.core::moduleParams("examinePS", "C:/Users/RALAS6/Documents/Repositories/SpaDES/modules")
+df_params <- SpaDES.core::moduleParams("examinePS", file.path("../../modules"))
 knitr::kable(df_params, caption = "List of (ref:examinePS) parameters and their description.") %>%
   kableExtra::kable_styling(latex_options = "scale_down", full_width = TRUE)
 ```
@@ -94,7 +97,7 @@ Write what is saved.
 Description of the module outputs (Table \@ref(tab:moduleOutputs-examinePS)).
 
 ```{r moduleOutputs-examinePS, echo = FALSE, eval = TRUE, message = FALSE, warning = FALSE}
-df_outputs <- SpaDES.core::moduleOutputs("examinePS", "C:/Users/RALAS6/Documents/Repositories/SpaDES/modules")
+df_outputs <- SpaDES.core::moduleOutputs("examinePS", file.path("../../modules"))
 knitr::kable(df_outputs, caption = "List of (ref:examinePS) outputs and their description.") %>%
   kableExtra::kable_styling(latex_options = "scale_down", full_width = TRUE)
 ```
@@ -106,3 +109,116 @@ Describe any anticipated linkages to other modules, such as modules that supply 
 ### Getting help
 
 -   provide a way for people to obtain help (e.g., module repository issues page)
+
+## Example code to run module
+
+```{r runExaminePS}
+# library("conflicted")
+library("SpaDES.core")
+
+options(spades.useRequire = FALSE)
+
+## set paths ####
+
+runName <- "17x10YrAgeClasses" # put outputs for each set of age classes/different study area in separate folder
+
+setPaths(
+  modulePath = file.path("../../modules"),
+  cachePath = file.path("../../cache"),
+  scratchPath = file.path("./scratch"),
+  inputPath = file.path("../../inputs"),
+  outputPath = file.path("../../outputs", runName)
+)
+simPaths <- getPaths()
+
+# specify inputs and input paths (to be provided as parameters), and download example input files ####
+
+# studyArea
+locationStudyArea <- checkPath(file.path(Paths$inputPath, "studyArea"), create = TRUE)
+.studyAreaName <- "studyArea_AB_BCR6.shp"
+zen4R::download_zenodo(doi = "10.5281/zenodo.17409820", path = locationStudyArea)
+unzip(file.path(locationStudyArea, paste(tools::file_path_sans_ext(.studyAreaName), ".zip", sep = "")), exdir = locationStudyArea)
+locationStudyArea <- file.path(Paths$inputPath, "studyArea", tools::file_path_sans_ext(.studyAreaName))
+
+# landscape rasters
+locationLandscapeRasters <- checkPath(file.path(Paths$inputPath, "landscapeRasters"), create = TRUE)
+zen4R::download_zenodo(doi = "10.5281/zenodo.17410019", path = locationLandscapeRasters)
+unzip(file.path(locationLandscapeRasters, "landscapeRasters.zip"), exdir = locationLandscapeRasters)
+
+nameForClassRas <- "vegTypesRas_AB_BCR6_2011"
+locationForClass <- locationLandscapeRasters
+
+nameLandClassRas <- "landCoverRas_AB_BCR6_2010"
+locationLandClass <- locationLandscapeRasters
+
+nameAgeRas <- "ageRas_AB_BCR6_2011"
+locationAge <- locationLandscapeRasters
+
+# species rasters
+locationSpRas <- checkPath(file.path(Paths$inputPath), create = TRUE)
+zen4R::download_zenodo(doi = "10.5281/zenodo.17516504", path = locationSpRas)
+unzip(file.path(locationSpRas, "meanSpRasters.zip"), exdir = locationSpRas)
+locationSpRas <- file.path(Paths$inputPath, "meanSpRasters")
+
+
+# specify rasterToMatch - this can be any raster that covers the whole study area at the desired resolution
+locationRasterToMatch <- locationLandscapeRasters # here I use the landCoverRas
+rasterToMatchName <- nameLandClassRas
+
+# specify BCR (to be provided as parameter)
+nameBCR <- "60"
+
+# provide species list (to be provided as parameter) ####
+spList <- sort(c(
+  "ALFL", "BBWA", "BCCH", "BOCH", "BRCR", "CMWA", "COYE",
+  "DEJU", "GCKI", "GRAJ", "LEFL", "MOWA", "OVEN", "PAWA",
+  "RBNU", "RCKI", "REVI", "SWTH", "TEWA", "YRWA"
+))
+
+# set simulation and module parameters ####
+simModules <- list("PS", "examinePS")
+simTimes <- list(start = 1, end = 1, timeunit = "year")
+simParams <- list(
+  PS = list(
+    doPredsInitialTime = 1,
+    .plotInitialTime = 1,
+    .saveInitialTime = 1,
+    nTrees = 10, # 5000, #glm number of trees
+    ageGrouping = 10, # choose age class width
+    maxAgeClass = 17, # choose number of age classes
+    only1DPS = FALSE, # choose 1DPS or 2DPS
+    spList = spList, # species to include in analysis
+    nameBCR = nameBCR,
+    studyAreaLocation = locationStudyArea, # specify folder containing the study area .shp file
+    .studyAreaName = .studyAreaName, # specify name of the study area .shp file
+    rasterToMatchLocation = locationRasterToMatch, # specify folder containing the rasterToMatch
+    rasterToMatchName = rasterToMatchName, # specify name of the raster to match
+    nameForClassRas = nameForClassRas, # specify name of the forest class raster
+    locationForClass = locationForClass, # specify folder containing the forest class raster
+    nameLandClassRas = nameLandClassRas, # specify name of the land class raster file
+    locationLandClass = locationLandClass, # specify folder containing the land Class Raster
+    nameAgeRas = nameAgeRas, # specify name of the age raster
+    locationAge = locationAge, # specify folder containing the age Raster
+    locationSpRas = locationSpRas # specify folder containing the species density rasters
+  ),
+  examinePS = list(
+    doPredsInitialTime = 1,
+    .plotInitialTime = 1,
+    .saveInitialTime = 1,
+    spList = spList, # species to include in analysis
+    only1DPS = FALSE # choose 1DPS or 2DPS
+  )
+)
+
+
+# simulation setup ####
+mySim <- simInit(
+  times = simTimes,
+  params = simParams,
+  modules = simModules,
+  paths = simPaths
+)
+
+# run simulation ####
+test <- spades(mySim)
+```

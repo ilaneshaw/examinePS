@@ -167,113 +167,113 @@ defineModule(sim, list(
 
 doEvent.examinePS <- function(sim, eventTime, eventType) {
   switch(eventType,
-         init = {
-           ### check for more detailed object dependencies:
-           ### (use `checkObject` or similar)
-           
-           # do stuff for this event
-           sim <- Init(sim)
-           
-           # schedule future event(s)
-           sim <- scheduleEvent(sim,
-                                eventTime = P(sim)$doPredsInitialTime,
-                                moduleName = "examinePS", eventType = "examine1D"
-           )
-           if (P(sim)$only1DPS == FALSE) {
-             sim <- scheduleEvent(sim,
-                                  eventTime = P(sim)$doPredsInitialTime,
-                                  moduleName = "examinePS", eventType = "examine2D"
-             )
-             sim <- scheduleEvent(sim,
-                                  eventTime = P(sim)$doPredsInitialTime,
-                                  moduleName = "examinePS", eventType = "compare1D2D"
-             )
-           }
-           sim <- scheduleEvent(sim, P(sim)$.plotInitialTime, "examinePS", "plot")
-           sim <- scheduleEvent(sim, P(sim)$.saveInitialTime, "examinePS", "save")
-         },
-         plot = {
-           # ! ----- EDIT BELOW ----- ! #
-           # do stuff for this event
-           
-           plotFun(sim) # example of a plotting function
-           # schedule future event(s)
-           
-           # e.g.,
-           sim <- scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "examinePS", "plot")
-           
-           # ! ----- STOP EDITING ----- ! #
-         },
-         save = {
-           # ! ----- EDIT BELOW ----- ! #
-           # do stuff for this event
-           
-           # e.g., call your custom functions/methods here
-           # you can define your own methods below this `doEvent` function
-           
-           # schedule future event(s)
-           
-           # e.g.,
-           # sim <- scheduleEvent(sim, time(sim) + P(sim)$.saveInterval, "examinePS", "save")
-           
-           # ! ----- STOP EDITING ----- ! #
-         },
-         examine1D = {
-           # ! ----- EDIT BELOW ----- ! #
-           # do stuff for this event
-           sim <- examine1D(sim)
-           # e.g., call your custom functions/methods here
-           # you can define your own methods below this `doEvent` function
-           
-           # schedule future event(s)
-           
-           # e.g.,
-           # sim <- scheduleEvent(sim, time(sim) + increment, "examinePS", "templateEvent")
-           sim <- scheduleEvent(sim,
-                                eventTime = time(sim) + P(sim)$doPredsInterval,
-                                moduleName = "examinePS", eventType = "examine1D"
-           )
-           # ! ----- STOP EDITING ----- ! #
-         },
-         examine2D = {
-           # ! ----- EDIT BELOW ----- ! #
-           # do stuff for this event
-           sim <- examine2D(sim)
-           # e.g., call your custom functions/methods here
-           # you can define your own methods below this `doEvent` function
-           
-           # schedule future event(s)
-           
-           # e.g.,
-           # sim <- scheduleEvent(sim, time(sim) + increment, "examinePS", "templateEvent")
-           sim <- scheduleEvent(sim,
-                                eventTime = time(sim) + P(sim)$doPredsInterval,
-                                moduleName = "examinePS", eventType = "examine2D"
-           )
-           # ! ----- STOP EDITING ----- ! #
-         },
-         compare1D2D = {
-           # ! ----- EDIT BELOW ----- ! #
-           # do stuff for this event
-           sim <- compare1D2D(sim)
-           # e.g., call your custom functions/methods here
-           # you can define your own methods below this `doEvent` function
-           
-           # schedule future event(s)
-           
-           # e.g.,
-           # sim <- scheduleEvent(sim, time(sim) + increment, "examinePS", "templateEvent")
-           sim <- scheduleEvent(sim,
-                                eventTime = time(sim) + P(sim)$doPredsInterval,
-                                moduleName = "examinePS", eventType = "compare1D2D"
-           )
-           
-           # ! ----- STOP EDITING ----- ! #
-         },
-         warning(paste("Undefined event type: \'", current(sim)[1, "eventType", with = FALSE],
-                       "\' in module \'", current(sim)[1, "moduleName", with = FALSE], "\'",
-                       sep = ""
-         ))
+    init = {
+      ### check for more detailed object dependencies:
+      ### (use `checkObject` or similar)
+
+      # do stuff for this event
+      sim <- Init(sim)
+
+      # schedule future event(s)
+      sim <- scheduleEvent(sim,
+        eventTime = P(sim)$doPredsInitialTime,
+        moduleName = "examinePS", eventType = "examine1D"
+      )
+      if (P(sim)$only1DPS == FALSE) {
+        sim <- scheduleEvent(sim,
+          eventTime = P(sim)$doPredsInitialTime,
+          moduleName = "examinePS", eventType = "examine2D"
+        )
+        sim <- scheduleEvent(sim,
+          eventTime = P(sim)$doPredsInitialTime,
+          moduleName = "examinePS", eventType = "compare1D2D"
+        )
+      }
+      sim <- scheduleEvent(sim, P(sim)$.plotInitialTime, "examinePS", "plot")
+      sim <- scheduleEvent(sim, P(sim)$.saveInitialTime, "examinePS", "save")
+    },
+    plot = {
+      # ! ----- EDIT BELOW ----- ! #
+      # do stuff for this event
+
+      plotFun(sim) # example of a plotting function
+      # schedule future event(s)
+
+      # e.g.,
+      sim <- scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "examinePS", "plot")
+
+      # ! ----- STOP EDITING ----- ! #
+    },
+    save = {
+      # ! ----- EDIT BELOW ----- ! #
+      # do stuff for this event
+
+      # e.g., call your custom functions/methods here
+      # you can define your own methods below this `doEvent` function
+
+      # schedule future event(s)
+
+      # e.g.,
+      # sim <- scheduleEvent(sim, time(sim) + P(sim)$.saveInterval, "examinePS", "save")
+
+      # ! ----- STOP EDITING ----- ! #
+    },
+    examine1D = {
+      # ! ----- EDIT BELOW ----- ! #
+      # do stuff for this event
+      sim <- examine1D(sim)
+      # e.g., call your custom functions/methods here
+      # you can define your own methods below this `doEvent` function
+
+      # schedule future event(s)
+
+      # e.g.,
+      # sim <- scheduleEvent(sim, time(sim) + increment, "examinePS", "templateEvent")
+      sim <- scheduleEvent(sim,
+        eventTime = time(sim) + P(sim)$doPredsInterval,
+        moduleName = "examinePS", eventType = "examine1D"
+      )
+      # ! ----- STOP EDITING ----- ! #
+    },
+    examine2D = {
+      # ! ----- EDIT BELOW ----- ! #
+      # do stuff for this event
+      sim <- examine2D(sim)
+      # e.g., call your custom functions/methods here
+      # you can define your own methods below this `doEvent` function
+
+      # schedule future event(s)
+
+      # e.g.,
+      # sim <- scheduleEvent(sim, time(sim) + increment, "examinePS", "templateEvent")
+      sim <- scheduleEvent(sim,
+        eventTime = time(sim) + P(sim)$doPredsInterval,
+        moduleName = "examinePS", eventType = "examine2D"
+      )
+      # ! ----- STOP EDITING ----- ! #
+    },
+    compare1D2D = {
+      # ! ----- EDIT BELOW ----- ! #
+      # do stuff for this event
+      sim <- compare1D2D(sim)
+      # e.g., call your custom functions/methods here
+      # you can define your own methods below this `doEvent` function
+
+      # schedule future event(s)
+
+      # e.g.,
+      # sim <- scheduleEvent(sim, time(sim) + increment, "examinePS", "templateEvent")
+      sim <- scheduleEvent(sim,
+        eventTime = time(sim) + P(sim)$doPredsInterval,
+        moduleName = "examinePS", eventType = "compare1D2D"
+      )
+
+      # ! ----- STOP EDITING ----- ! #
+    },
+    warning(paste("Undefined event type: \'", current(sim)[1, "eventType", with = FALSE],
+      "\' in module \'", current(sim)[1, "moduleName", with = FALSE], "\'",
+      sep = ""
+    ))
   )
   return(invisible(sim))
 }
@@ -284,9 +284,9 @@ doEvent.examinePS <- function(sim, eventTime, eventType) {
 ### template initialization
 Init <- function(sim) {
   # # ! ----- EDIT BELOW ----- ! #
-  
+
   # ! ----- STOP EDITING ----- ! #
-  
+
   return(invisible(sim))
 }
 
@@ -295,7 +295,7 @@ Save <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
   # do stuff for this event
   sim <- saveFiles(sim)
-  
+
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
 }
@@ -303,7 +303,7 @@ Save <- function(sim) {
 ### template for plot events
 plotFun <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
-  
+
   # Plot sp raster, PS raster and res raster for comparison ####
   lapply(sim$spList, FUN = function(sp) {
     ### get sp rasters
@@ -315,13 +315,13 @@ plotFun <- function(sim) {
       mapRas2D <- eval(parse(text = paste("sim$for2DAndLc1DMaps$", sp, sep = "")))
       resRas2D <- eval(parse(text = paste("sim$for2DAndLc1DRes$", sp, sep = "")))
     }
-    
+
     ## 1DPS ####
     clearPlot()
     Plot(nmRas, title = paste("BAM Sp Density Prediction Model for ", sp, sep = ""), na.color = "white")
     Plot(mapRas1D, title = paste("1D Mapped Predictions for ", sp, sep = ""), na.color = "white")
     Plot(resRas1D, title = paste("1D Residuals for ", sp, sep = ""), na.color = "white")
-    
+
     ## 2DPS ####
     if (P(sim)$only1DPS == FALSE) {
       clearPlot()
@@ -330,9 +330,9 @@ plotFun <- function(sim) {
       Plot(resRas2D, title = paste("2D Residuals for ", sp, sep = ""), na.color = "white")
     }
   })
-  
+
   print("end examinePS plotting")
-  
+
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
 }
@@ -340,13 +340,13 @@ plotFun <- function(sim) {
 ### template for your event1
 examine1D <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
-  
+
   # Calculate 1DPS assumption summaries ####
   print("get assumptions summaries")
-  
+
   ### Make single dataframe
   spPreds1DSingleFrame <- rbindlist(sim$spPreds1D)
-  
+
   ## Make table of binary normality and unimodality ####
   ### If p value is less than or equal to 0.05 it fails the test and is not considered normal/unimodal
   ### fail = 0, pass = 1
@@ -355,23 +355,23 @@ examine1D <- function(sim) {
   assumpTab1D$normal[assumpTab1D$normality_p < 0.05] <- 0
   assumpTab1D$normal[assumpTab1D$normality_p == 0.05] <- 0
   assumpTab1D$normal[assumpTab1D$normality_p > 0.05] <- 1
-  
-  
+
+
   assumpTab1D$unimodal <- NA
   assumpTab1D$unimodal[assumpTab1D$unimodality_p < 0.05] <- 0
   assumpTab1D$unimodal[assumpTab1D$unimodality_p == 0.05] <- 0
   assumpTab1D$unimodal[assumpTab1D$unimodality_p > 0.05] <- 1
   assumpTab1D <- assumpTab1D[, c(1, 2, 5, 6, 7)]
-  
-  
+
+
   ### We make assume that if there is an NA, it is not normal/unimodal
   assumpTab1D$normal[is.na(assumpTab1D$normal) == TRUE] <- 0
   assumpTab1D$unimodal[is.na(assumpTab1D$unimodal) == TRUE] <- 0
-  
-  
+
+
   ### Save
   write.csv(sim$assumpTab1D, file = file.path(sim$outputPredsLocation, "assumpTab1D.csv"))
-  
+
   ## Make table of prop of sp with p values under 0.05 per class ####
   print("get assumptions by class 1D")
   sim$assumptionsByClass1D <- assumpTab1D[order(landForClass)][, list(
@@ -383,7 +383,7 @@ examine1D <- function(sim) {
   by = landForClass
   ]
   write.csv(sim$assumptionsByClass1D, file = file.path(sim$outputPredsLocation, "assumptionsByClass1D.csv"))
-  
+
   ## Make table of sp giving prop of classes with p values under 0.05 ####
   print("get assumptions by sp 1D")
   sim$assumptionsBySp1D <- assumpTab1D[order(species)][, list(
@@ -395,8 +395,8 @@ examine1D <- function(sim) {
   by = species
   ]
   write.csv(sim$assumptionsBySp1D, file = file.path(sim$outputPredsLocation, "assumptionsBySp1D.csv"))
-  
-  
+
+
   # Make 1DPS residual rasters ####
   print("Make for1DAndLc1DRes ")
   sim$for1DAndLc1DRes <- lapply(X = sim$spList, FUN = function(sp) {
@@ -404,16 +404,16 @@ examine1D <- function(sim) {
     NM <- eval(parse(text = paste("sim$spRasters$", sp, sep = "")))
     PS <- eval(parse(text = paste("sim$for1DAndLc1DMaps$", sp, sep = "")))
     res <- NM - PS
-    
+
     names(res) <- paste(sp)
-    
+
     print(paste(sp, " for 1D and lc 1D res raster complete"))
     return(res)
   })
-  
+
   names(sim$for1DAndLc1DRes) <- sim$spList
-  
-  
+
+
   ### save residual rasters
   lapply(X = sim$spList, FUN = function(sp) {
     raster <- eval(parse(text = paste("sim$for1DAndLc1DRes$", sp, sep = "")))
@@ -426,8 +426,8 @@ examine1D <- function(sim) {
       overwrite = TRUE
     )
   })
-  
-  
+
+
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
 }
@@ -436,33 +436,32 @@ examine1D <- function(sim) {
 ### template for your event2
 examine2D <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
-  
+
   # Make spStats2D ####
   ### This is a list of lists giving a spStats2D data table and vector classesNotPresent for each sp species on the spList.
   print("get spStats2D")
-  
+
   sim$spStats2D <- lapply(X = sim$spList, FUN = function(sp) {
-    
     print(sp)
     forestedDT <- as.data.table(eval(parse(text = paste("sim$spDatasets$", sp, sep = ""))))
     ## separate forested rows
     forestedDT <- forestedDT[FoLRaster == "forClass"]
     forestedDT <- droplevels(forestedDT)
-    
+
     ## Remove rows with NA for age
     forestedDT <- na.omit(forestedDT, cols = "age")
-    
+
     ## get age classes for each row using the ageClassDefs table
     ageClass <- forestedDT[, age]
     ageClass <- as.data.table(ageClass)
     ageClass[] <- lapply(ageClass, function(x) sim$spPreds$ageClassDefs$ageClasses[match(x, sim$spPreds$ageClassDefs$allAges)])
     # add the ageClass to the forestedDT
     spDataNew <- cbind(forestedDT, ageClass)
-    
+
     ### create new column, landAgeClass, giving the uniqueLandClass and ageClass combined
     spDataNew <- as.data.table(unite(spDataNew, landAgeClass, c(landForClass, ageClass), sep = ".", remove = FALSE))
-    
-    
+
+
     ## Make data table of statistics on the sp Data based on 2D classes ####
     proportionTiesCutoff <- 0.80
     singleSpStats2D <- spDataNew[
@@ -474,16 +473,25 @@ examine2D <- function(sim) {
       varSpDensity = var(spDensity) * (.N - 1) / .N, # get the variance for sp density for each class
       seSpDensity = std.error(spDensity), # get the standard error for sp density for each  class
       normality.p = tryCatch(nortest::ad.test(spDensity)$p.value,
-                             error = function(cond) {return(NaN)}),
-      unimodality.p = tryCatch({
-        if ((length(unique(spDensity))/.N) < proportionTiesCutoff) NaN
-        else diptest::dip.test(spDensity)$p.value
-      }, error = function(cond) NaN),
+        error = function(cond) {
+          return(NaN)
+        }
+      ),
+      unimodality.p = tryCatch(
+        {
+          if ((length(unique(spDensity)) / .N) < proportionTiesCutoff) {
+            NaN
+          } else {
+            diptest::dip.test(spDensity)$p.value
+          }
+        },
+        error = function(cond) NaN
+      ),
       species = sp
     ),
     by = list(landAgeClass)
     ]
-    
+
     # Make forClassCountTab ####
     landClasses <- base::rep(sort(unique(spDataNew$forClass)), each = P(sim)$maxAgeClass)
     landClasses <- as.data.table(landClasses)
@@ -491,41 +499,42 @@ examine2D <- function(sim) {
     ageClasses <- as.data.table(ageClasses)
     ras <- rep("forClass", times = nrow(ageClasses))
     sim$forClassCountTab <- cbind(ras, landClasses, ageClasses)
-    sim$forClassCountTab <-  unite( sim$forClassCountTab, landAgeClass, c(landClasses, ageClasses), sep= ".", remove=FALSE)
-    sim$forClassCountTab <-  as.data.table(unite( sim$forClassCountTab, landAgeClass, c(ras, landAgeClass), sep= "_", remove=FALSE))
-    sim$forClassCountTab <- base::merge(sim$forClassCountTab, 
-                                        singleSpStats2D[, .(landAgeClass, classCount)], 
-                                        by = "landAgeClass", 
-                                        all.x = TRUE)
+    sim$forClassCountTab <- unite(sim$forClassCountTab, landAgeClass, c(landClasses, ageClasses), sep = ".", remove = FALSE)
+    sim$forClassCountTab <- as.data.table(unite(sim$forClassCountTab, landAgeClass, c(ras, landAgeClass), sep = "_", remove = FALSE))
+    sim$forClassCountTab <- base::merge(sim$forClassCountTab,
+      singleSpStats2D[, .(landAgeClass, classCount)],
+      by = "landAgeClass",
+      all.x = TRUE
+    )
     sim$forClassCountTab$classCount[is.na(sim$forClassCountTab$classCount)] <- 0
     sim$forClassCountTab$meetsMinStatsSample <- sim$forClassCountTab$classCount > P(sim)$min2DStatsSample
-    
-    ### save 
+
+    ### save
     write.csv(sim$forClassCountTab, file = file.path(sim$outputPredsLocation, "forClassCountTab.csv"))
-    
+
     # Exclude any classes with smaller sample size than minStatsSample (a parameter) ####
     singleSpStats2D <- subset(singleSpStats2D, classCount > P(sim)$min2DStatsSample)
-    
+
     return(singleSpStats2D)
   })
-  
+
   names(sim$spStats2D) <- sim$spList
-  
+
   ### make single dataframe of 2D stats
   spStats2DSingleFrame <- rbindlist(sim$spStats2D)
-  
-  
+
+
   # Calculate 2DPS assumption summaries ####
   print("Calculate 2DPS assumption summaries")
-  
+
   ## Make table of binary normality and unimodality ####
   assumpTab2D <- spStats2DSingleFrame[, c(1, 7, 8, 9)]
   assumpTab2D$normal <- NA
   assumpTab2D$normal[assumpTab2D$normality > 0.05] <- 0
   assumpTab2D$normal[assumpTab2D$normality == 0.05] <- 1
   assumpTab2D$normal[assumpTab2D$normality < 0.05] <- 1
-  
-  
+
+
   assumpTab2D$unimodal <- NA
   assumpTab2D$unimodal[assumpTab2D$unimodality > 0.05] <- 0
   assumpTab2D$unimodal[assumpTab2D$unimodality == 0.05] <- 1
@@ -533,7 +542,7 @@ examine2D <- function(sim) {
   assumpTab2D <- assumpTab2D[, c(1, 4, 5, 6)]
   assumpTab2D
   write.csv(assumpTab2D, file = file.path(sim$outputPredsLocation, "assumpTab2D.csv"))
-  
+
   ## Make table of prop of sp with p values under 0.05 per class ####
   sim$assumptionsByClass2D <- assumpTab2D[order(landAgeClass)][, list(
     noSps = .N,
@@ -544,7 +553,7 @@ examine2D <- function(sim) {
   by = landAgeClass
   ]
   write.csv(sim$assumptionsByClass2D, file = file.path(sim$outputPredsLocation, "assumptionsByClass2D.csv"))
-  
+
   ## Make table of sp giving prop of classes with p values under 0.05 ####
   sim$assumptionsBySp2D <- assumpTab2D[order(species)][, list(
     noClasses = .N,
@@ -555,26 +564,26 @@ examine2D <- function(sim) {
   by = species
   ]
   write.csv(sim$assumptionsBySp2D, file = file.path(sim$outputPredsLocation, "assumptionsBySp2D.csv"))
-  
-  
+
+
   # Make 2DPS residual rasters ####
   ### Make residual rasters of composite 2D predictions for forClassraster areas and 1D predictions for landClassRaster areas
   print("make for2DAndLc1DRes")
   sim$for2DAndLc1DRes <- lapply(X = sim$spList, FUN = function(sp) {
     print(sp)
-    
+
     NM <- eval(parse(text = paste("sim$spRasters$", sp, sep = "")))
     PS <- eval(parse(text = paste("sim$for2DAndLc1DMaps$", sp, sep = "")))
     res <- NM - PS
-    
+
     names(res) <- paste(sp)
-    
+
     print(paste(sp, " for 2D and lc 1D res raster complete"))
     return(res)
   })
-  
+
   names(sim$for2DAndLc1DRes) <- sim$spList
-  
+
   ### save
   lapply(X = sim$spList, FUN = function(sp) {
     raster <- eval(parse(text = paste("sim$for2DAndLc1DRes$", sp, sep = "")))
@@ -587,86 +596,86 @@ examine2D <- function(sim) {
       overwrite = TRUE
     )
   })
-  
+
   # Calculate spearman stats ####
   print("get spearman stats")
   spearmanStats <- lapply(X = sim$spList, FUN = function(sp) {
     print(sp)
-    
+
     nmRas <- eval(parse(text = paste("sim$spRasters$", sp, sep = "")))
     map1D <- eval(parse(text = paste("sim$for1DAndLc1DMaps$", sp, sep = "")))
     map2D <- eval(parse(text = paste("sim$for2DAndLc1DMaps$", sp, sep = "")))
-    
-    
+
+
     valsNM <- as.data.table(terra::values(nmRas, dataframe = FALSE))
     vals1DMap <- as.data.table(terra::values(map1D, dataframe = FALSE))
     vals2DMap <- as.data.table(terra::values(map2D, dataframe = FALSE))
     valsMaps <- cbind(valsNM, vals1DMap, vals2DMap)
     valsMaps <- na.omit(valsMaps)
     colnames(valsMaps) <- c("valsNM", "vals1DMap", "vals2DMap")
-    
+
     head(valsMaps)
-    
+
     spearman1D <- cor(valsMaps$valsNM, valsMaps$vals1DMap, method = "spearman")
     print(spearman1D)
     spearman2D <- cor(valsMaps$valsNM, valsMaps$vals2DMap, method = "spearman")
     print(spearman2D)
-    
+
     spearmanStats <- matrix(c(spearman1D, spearman2D), ncol = 2, byrow = TRUE)
     colnames(spearmanStats) <- c("spearman1D", "spearman2D")
     row.names(spearmanStats) <- sp
-    
+
     return(spearmanStats)
   })
-  
+
   sim$spearmanStats <- do.call(rbind, spearmanStats)
-  
+
   fileName <- "spearmanStats.csv"
   write.csv(sim$spearmanStats, file = file.path(sim$outputPredsLocation, fileName))
-  
+
   head(sim$spearmanStats)
-  
-  
+
+
   # Calculate  residual stats ####
-  
+
   ## Get tables of residual values ####
   print("get resTabs")
   sim$resTabs <- lapply(X = sim$spList, FUN = function(sp) {
     ras1D <- eval(parse(text = paste("sim$for1DAndLc1DRes$", sp, sep = "")))
     ras2D <- eval(parse(text = paste("sim$for2DAndLc1DRes$", sp, sep = "")))
-    
+
     resVals1D <- as.data.table(terra::values(ras1D, dataframe = FALSE))
     resVals1D <- setnames(resVals1D, "resVals")
     resVals1D <- na.omit(resVals1D)
     res1DLab <- rep("res1D", nrow(resVals1D))
     resVals1D <- cbind(resVals1D, typePS = res1DLab)
-    
+
     resVals2D <- as.data.table(terra::values(ras2D, dataframe = FALSE))
     resVals2D <- setnames(resVals2D, "resVals")
     resVals2D <- na.omit(resVals2D)
     res2DLab <- rep("res2D", nrow(resVals2D))
     resVals2D <- cbind(resVals2D, typePS = res2DLab)
-    
+
     resVals <- rbind(resVals1D, resVals2D)
     species <- rep(paste(sp), nrow(resVals))
     resVals <- cbind(resVals, species = species)
     resVals[, absResVals := abs(resVals)]
     print(resVals)
-    
+
     return(resVals)
   })
   names(sim$resTabs) <- sim$spList
-  
-  
+
+
   ## Calculate stats ####
   print("get residual stats")
   residualStats <- lapply(X = sim$spList, FUN = function(sp) {
     print(sp)
-    
+
     nmRas <- eval(parse(text = paste("sim$spRasters$", sp, sep = "")))
     res1D <- eval(parse(text = paste("sim$for1DAndLc1DRes$", sp, sep = "")))
     res2D <- eval(parse(text = paste("sim$for2DAndLc1DRes$", sp, sep = "")))
-    
+
     resTab <- eval(parse(text = paste("sim$resTabs$", sp, sep = "")))
     absResStats <- resTab[, list(
       medResAbs = median(absResVals),
@@ -674,7 +683,7 @@ examine2D <- function(sim) {
     ),
     by = typePS
     ]
-    
+
     m1D <- median(terra::values(res1D, dataframe = FALSE), na.rm = TRUE)
     m2D <- median(terra::values(res2D, dataframe = FALSE), na.rm = TRUE)
     sa1D <- terra::autocor(res1D, method = "moran")
@@ -686,32 +695,32 @@ examine2D <- function(sim) {
     mNM <- median(terra::values(nmRas, dataframe = FALSE), na.rm = TRUE)
     medAbsProp1D <- m1DAbs / mNM
     medAbsProp2D <- m2DAbs / mNM
-    
+
     residualStats <- matrix(c(m1D, m2D, sa1D, sa2D, m1DAbs, m2DAbs, max1DAbs, max2DAbs, mNM, medAbsProp1D, medAbsProp2D), ncol = 11, byrow = TRUE)
     colnames(residualStats) <- c("median1DRes", "median2DRes", "autocor1DRes", "autocor2DRes", "median1DResAbs", "median2DResAbs", "max1DResAbs", "max2DResAbs", "nmMedian", "propOfNM1DMed", "propOfNM2DMed")
     row.names(residualStats) <- sp
     print(paste(sp, " calculation complete"))
     return(residualStats)
   })
-  
+
   sim$residualStats <- do.call(rbind, residualStats)
-  
+
   ### save
   fileName <- "resStats.csv"
   write.csv(sim$residualStats, file = file.path(sim$outputPredsLocation, fileName))
-  
+
   head(sim$residualStats)
-  
-  
+
+
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
 }
 
 compare1D2D <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
-  
+
   # Compare 1DPS and 2DPS results ####
-  
+
   ## Unimodality and normality  ####
   names(sim$assumptionsByClass1D)[names(sim$assumptionsByClass1D) == "landForClass"] <- "landAgeClass"
   sim$assumptionsByClass1D <- sim$assumptionsByClass1D[1:6]
@@ -722,7 +731,7 @@ compare1D2D <- function(sim) {
   # assumptionsByClass <- assumptionsByClass[,2:5]
   assumptionsByClass$smoothingType <- as.factor(assumptionsByClass$smoothingType)
   assumptionsByClass$landAgeClass <- as.factor(assumptionsByClass$landAgeClass)
-  
+
   ### Gather summaries
   print("assumptions by class 1D summary")
   summary(sim$assumptionsByClass1D)
@@ -733,41 +742,47 @@ compare1D2D <- function(sim) {
   sdNormality_2D <- sd(sim$assumptionsByClass2D$propSpsNormal)
   sim$sdAssumptions <- data.table(sdUnimodality_1D, sdUnimodality_2D, sdNormality_1D, sdNormality_2D)
   print(sim$sdAssumptions)
-  
+
   print("assumptions by class 2D summary")
   summary(sim$assumptionsByClass2D)
-  
+
   ### Do t test - unimodality
   print("1D vs 2D unimodality")
-  sim$unimodalityTTest <- tryCatch(data.frame(broom::tidy(t.test(propSpsUnimodal ~ smoothingType,
-                                                                 data = assumptionsByClass))), 
-                                   error = function(cond) {
-                                     sim$unimodalityTTest <- NA
-                                   })
-  
-  if(is.data.frame(sim$unimodalityTTest)){
+  sim$unimodalityTTest <- tryCatch(
+    data.frame(broom::tidy(t.test(propSpsUnimodal ~ smoothingType,
+      data = assumptionsByClass
+    ))),
+    error = function(cond) {
+      sim$unimodalityTTest <- NA
+    }
+  )
+
+  if (is.data.frame(sim$unimodalityTTest)) {
     names(sim$unimodalityTTest) <- c("estimate", "mean1DPS", "mean2DPS", "t", "p.value", "df", "conf.low", "conf.high", "method", "alternative")
     data <- "propSpsUnimodal_by_smoothingType"
     sim$unimodalityTTest <- data.frame(data, sim$unimodalityTTest)
-  } 
+  }
   print(sim$unimodalityTTest)
-  
+
   ### Do t test - normality
   print("1D vs 2D normality")
-  sim$normalityTTest <- tryCatch(data.frame(broom::tidy(t.test(propSpsNormal ~ smoothingType,
-                                                               data = assumptionsByClass))), 
-                                 error = function(cond) {
-                                   sim$normalityTTest <- NA
-                                 })
+  sim$normalityTTest <- tryCatch(
+    data.frame(broom::tidy(t.test(propSpsNormal ~ smoothingType,
+      data = assumptionsByClass
+    ))),
+    error = function(cond) {
+      sim$normalityTTest <- NA
+    }
+  )
   print(sim$normalityTTest)
-  
-  if(is.data.frame(sim$normalityTTest)){
+
+  if (is.data.frame(sim$normalityTTest)) {
     names(sim$normalityTTest) <- c("estimate", "mean1DPS", "mean2DPS", "t", "p.value", "df", "conf.low", "conf.high", "method", "alternative")
     data <- "propSpsNormal_by_smoothingType"
     sim$normalityTTest <- data.frame(data, sim$normalityTTest)
-  } 
+  }
   print(sim$normalityTTest)
-  
+
   ## Spearman rank ####
   sim$spearmanStats <- as.data.frame(sim$spearmanStats)
   print("spearman stats summary")
@@ -776,27 +791,30 @@ compare1D2D <- function(sim) {
   sdSpearman2D <- sd(sim$spearmanStats$spearman2D)
   sim$sdSpearman <- data.table(sdSpearman1D, sdSpearman2D)
   print(sim$sdSpearman)
-  
+
   spearmanTab <- gather(data = sim$spearmanStats, key = "smoothingType", value = "spearmanStat")
   spearmanTab <- na.omit(spearmanTab)
   spearmanTab <- as.data.table(spearmanTab)
-  
+
   ### Do t test - spearman
   print("compare 1D vs 2D spearman")
-  sim$corrTTest <- tryCatch(data.frame(broom::tidy(t.test(spearmanStat ~ smoothingType,
-                                                          data = spearmanTab))), 
-                            error = function(cond) {
-                              sim$corrTTest <- NA
-                            })
-  
-  if(is.data.frame(sim$corrTTest)){
+  sim$corrTTest <- tryCatch(
+    data.frame(broom::tidy(t.test(spearmanStat ~ smoothingType,
+      data = spearmanTab
+    ))),
+    error = function(cond) {
+      sim$corrTTest <- NA
+    }
+  )
+
+  if (is.data.frame(sim$corrTTest)) {
     names(sim$corrTTest) <- c("estimate", "mean1DPS", "mean2DPS", "t", "p.value", "df", "conf.low", "conf.high", "method", "alternative")
     data <- "spearmanStat_by_smoothingType"
     sim$corrTTest <- data.frame(data, sim$corrTTest)
-  } 
+  }
   print(sim$corrTTest)
-  
-  
+
+
   ## Spatial autocorrelation ####
   sim$residualStats <- data.table(sim$residualStats)
   moranStats <- sim$residualStats[, c(3:4)]
@@ -809,30 +827,30 @@ compare1D2D <- function(sim) {
   moranStats <- gather(data = moranStats, key = "smoothingType", value = "MoransI")
   moranStats <- na.omit(moranStats)
   moranStats <- as.data.table(moranStats)
-  
-  
+
+
   ### Do t test - morans
   print("compare 1D vs 2D Moran")
   sim$saTTest <- tryCatch(data.frame(broom::tidy(t.test(MoransI ~ smoothingType,
-                                                        data = moranStats
+    data = moranStats
   ))), error = function(cond) {
     sim$saTTest <- NA
   })
-  
-  if(is.data.frame(sim$saTTest)){
+
+  if (is.data.frame(sim$saTTest)) {
     names(sim$saTTest) <- c("estimate", "mean1DPS", "mean2DPS", "t", "p.value", "df", "conf.low", "conf.high", "method", "alternative")
     data <- "MoransI_by_smoothingType"
     sim$saTTest <- data.frame(data, sim$saTTest)
-  } 
+  }
   print(sim$saTTest)
-  
+
   ## Put t test results in single table ####
   sim$tTestResults <- rbind(sim$unimodalityTTest, sim$normalityTTest, sim$corrTTest, sim$saTTest)
   print(sim$tTestResults)
-  
+
   ### save
   write.csv(sim$tTestResults, file = file.path(sim$outputPredsLocation, "tTestResults.csv"))
-  
+
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
 }
@@ -851,130 +869,130 @@ compare1D2D <- function(sim) {
   # if (!suppliedElsewhere('defaultColor', sim)) {
   #   sim$map <- Cache(prepInputs, extractURL('map')) # download, extract, load file from url in sourceURL
   # }
-  
+
   # cacheTags <- c(currentModule(sim), "function:.inputObjects") ## uncomment this if Cache is being used
   dPath <- asPath(getOption("reproducible.destinationPath", dataPath(sim)), 1)
   message(currentModule(sim), ": using dataPath '", dPath, "'.")
-  
+
   # ! ----- EDIT BELOW ----- ! #
-  
+
   # Get rasterToMatch ####
   if (!suppliedElsewhere("rasterToMatch", sim)) {
     print("get rasterTomatch from local drive")
     sim$rasterToMatch <- terra::rast(file.path(P(sim)$rasterToMatchLocation, P(sim)$rasterToMatchName))
     names(sim$rasterToMatch) <- "rasterToMatch"
   }
-  
+
   # Get studyArea shapefile ####
   if (!suppliedElsewhere("studyArea", sim)) {
     print("get studyArea shapefile from local drive")
     studyArea <- terra::vect(file.path(P(sim)$studyAreaLocation, P(sim)$.studyAreaName))
-    
+
     # postProcess studyArea
     sim$studyArea <- reproducible::Cache(reproducible::postProcessTo,
-                                         from = studyArea,
-                                         to = sim$rasterToMatch,
-                                         overwrite = FALSE,
-                                         verbose = TRUE
+      from = studyArea,
+      to = sim$rasterToMatch,
+      overwrite = FALSE,
+      verbose = TRUE
     )
   }
-  
+
   # crop and mask rasterToMatch to studyArea
   sim$rasterToMatch <- reproducible::Cache(terra::crop, sim$rasterToMatch, sim$studyArea)
   sim$rasterToMatch <- reproducible::Cache(terra::mask, sim$rasterToMatch, sim$studyArea)
-  
+
   # Get forest class raster ####
   if (!suppliedElsewhere("forClassRas", sim)) {
     print("get forClassRas")
     sim$forClassRas <- terra::rast(file.path(P(sim)$locationForClass, P(sim)$nameForClassRas))
     names(sim$forClassRas) <- c("forClassRas")
-    
+
     # postprocess raster - cropping, masking to the study area and reprojecting to the rasterToMatch
     sim$forClassRas <- reproducible::Cache(reproducible::postProcessTo,
-                                           from = sim$forClassRas,
-                                           to = sim$rasterTomatch,
-                                           cropTo = sim$studyArea,
-                                           maskTo = sim$studyArea,
-                                           overwrite = FALSE,
-                                           verbose = TRUE
+      from = sim$forClassRas,
+      to = sim$rasterTomatch,
+      cropTo = sim$studyArea,
+      maskTo = sim$studyArea,
+      overwrite = FALSE,
+      verbose = TRUE
     )
-    
+
     print(sim$forClassRas)
   }
-  
+
   # Get land cover raster ####
   if (!suppliedElsewhere("landClassRas", sim)) {
     print("get landClassRas")
     sim$landClassRas <- terra::rast(file.path(P(sim)$locationLandClass, P(sim)$nameLandClassRas))
     names(sim$landClassRas) <- c("landClassRas")
-    
+
     # postprocess raster - cropping, masking to the study area and reprojecting to the rasterToMatch
     sim$landClassRas <- reproducible::Cache(reproducible::postProcessTo,
-                                            from = sim$landClassRas,
-                                            to = sim$rasterTomatch,
-                                            cropTo = sim$studyArea,
-                                            maskTo = sim$studyArea,
-                                            overwrite = FALSE,
-                                            verbose = TRUE
+      from = sim$landClassRas,
+      to = sim$rasterTomatch,
+      cropTo = sim$studyArea,
+      maskTo = sim$studyArea,
+      overwrite = FALSE,
+      verbose = TRUE
     )
-    
+
     # mask out areas covered by forest class raster
     sim$landClassRas <- terra::mask(sim$landClassRas, sim$forClassRas, inverse = TRUE)
-    
+
     print(sim$landClassRas)
   }
-  
-  
+
+
   # Get ageRas ####
   if (P(sim)$only1DPS == FALSE) {
     if (!suppliedElsewhere("ageRas", sim)) {
       print("get ageRas")
       sim$ageRas <- terra::rast(file.path(P(sim)$locationAge, P(sim)$nameAgeRas))
       names(sim$ageRas) <- c("ageRas")
-      
+
       # postprocess raster - cropping, masking to the study area and reprojecting to the rasterToMatch
       sim$ageRas <- reproducible::Cache(reproducible::postProcessTo,
-                                        from = sim$ageRas,
-                                        to = sim$rasterToMatch,
-                                        cropTo = sim$studyArea,
-                                        maskTo = sim$studyArea,
-                                        overwrite = FALSE,
-                                        verbose = TRUE
+        from = sim$ageRas,
+        to = sim$rasterToMatch,
+        cropTo = sim$studyArea,
+        maskTo = sim$studyArea,
+        overwrite = FALSE,
+        verbose = TRUE
       )
-      
+
       print(sim$ageRas)
     }
   }
-  
-  
+
+
   # Get sp density rasters ####
   if (!suppliedElsewhere("spRasters", sim)) {
     sim$spList <- sort(P(sim)$spList)
-    
+
     # list all species rasters in locationSpRas
     namesAllSpRast <- list.files(path = P(sim)$locationSpRas, full.names = FALSE)
-    
+
     ## input the raster for each species in the spList one by one
     sim$spRasters <- lapply(X = P(sim)$spList, FUN = function(sp) {
       print(sp)
       tryCatch(
         {
           # sp <- paste(sp, ".tif", sep = "")
-          
+
           spRas <- namesAllSpRast[grep(sp, basename(namesAllSpRast))]
-          
+
           if (length(spRas) == 0) {
             print(paste("No file found in namesAllSpRast for ", sp, sep = ""))
           } else if (length(spRas) > 1) {
             print(paste("Multiple files matched ", sp,
-                        ":", spRas,
-                        sep = ""
+              ":", spRas,
+              sep = ""
             ))
           }
-          
+
           spRas <- terra::rast(file.path(P(sim)$locationSpRas, spRas))
           names(spRas) <- sp
-          
+
           # postprocess raster - cropping, masking to the study area and reprojecting to the rasterToMatch
           spRas <- reproducible::postProcessTo(
             from = spRas,
@@ -984,7 +1002,7 @@ compare1D2D <- function(sim) {
             overwrite = FALSE,
             verbose = TRUE
           )
-          
+
           return(spRas)
         },
         error = function(e) {
@@ -992,10 +1010,10 @@ compare1D2D <- function(sim) {
         }
       )
     })
-    
+
     names(sim$spRasters) <- P(sim)$spList
   }
-  
+
   # Remove any NAs in the spRasters List ####
   naSp <- is.na(sim$spRasters)
   if (any(naSp)) {
@@ -1004,27 +1022,27 @@ compare1D2D <- function(sim) {
       paste(names(sim$spRasters)[naSp], collapse = ", ")
     ))
   }
-  
+
   sim$spRasters <- sim$spRasters[!naSp]
-  
+
   # change the spList to reflect only present species rasters (updated from the spList parameter)
   sim$spList <- names(sim$spRasters)
-  
+
   # Set separate folders for output components ####
   sim$outputPredsLocation <- checkPath(file.path(Paths$outputPath, "PSPreds/"), create = TRUE)
   sim$outputRasLocation <- checkPath(file.path(Paths$outputPath, "PSRas/"), create = TRUE)
-  
+
   # Check for ageClassRaster and PS module outputs  ####
   if (P(sim)$only1DPS == FALSE) {
     if (!suppliedElsewhere("ageClassRaster", sim)) {
       print("You need to make an ageClassRaster")
     }
   }
-  
+
   if (!suppliedElsewhere("spDatasets", sim)) {
     print("You are missing your PS module outputs")
   }
-  
+
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
 }
@@ -1035,4 +1053,3 @@ ggplotFn <- function(data, ...) {
 }
 
 ### add additional events as needed by copy/pasting from above
-
