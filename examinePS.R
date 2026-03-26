@@ -17,7 +17,7 @@ defineModule(sim, list(
   documentation = list("NEWS.md", "README.md", "examinePS.Rmd"),
   reqdPkgs = list(
     "PredictiveEcology/SpaDES.core@development (>= 2.0.2.9000)", "ggplot2", "sf", "data.table", "terra",
-    "LandR", "googledrive", "plotrix", "ggpubr", "diptest", "nortest", "dplyr", "tidyverse", "reshape2", "gt", "gtExtras"
+    "LandR", "googledrive", "plotrix", "ggpubr", "diptest", "nortest", "tidyr", "dplyr", "broom", "reshape2", "gt", "gtExtras"
   ),
   parameters = bindrows(
     # defineParameter("paramName", "paramClass", value, min, max, "parameter description"),
@@ -111,7 +111,7 @@ defineModule(sim, list(
       "the location of the age raster"
     ),
     defineParameter(
-      "locationSpRaster", "character", NA, NA, NA,
+      "locationSpRas", "character", NA, NA, NA,
       "the location of the sp density rasters"
     ),
     ## .seed is optional: `list('init' = 123)` will `set.seed(123)` for the `init` event only.
@@ -308,12 +308,12 @@ plotFun <- function(sim) {
   lapply(sim$spList, FUN = function(sp) {
     ### get sp rasters
     print(sp)
-    nmRas <- eval(parse(text = paste("sim$spRasters$", sp, sep = "")))
-    mapRas1D <- eval(parse(text = paste("sim$for1DAndLc1DMaps$", sp, sep = "")))
-    resRas1D <- eval(parse(text = paste("sim$for1DAndLc1DRes$", sp, sep = "")))
+    nmRas <- sim$spRasters[[sp]]
+    mapRas1D <- sim$for1DAndLc1DMaps[[sp]]
+    resRas1D <- sim$for1DAndLc1DRes[[sp]]
     if (P(sim)$only1DPS == FALSE) {
-      mapRas2D <- eval(parse(text = paste("sim$for2DAndLc1DMaps$", sp, sep = "")))
-      resRas2D <- eval(parse(text = paste("sim$for2DAndLc1DRes$", sp, sep = "")))
+      mapRas2D <- sim$for2DAndLc1DMaps[[sp]]
+      resRas2D <- sim$for2DAndLc1DRes[[sp]]
     }
 
     ## 1DPS ####
@@ -348,31 +348,27 @@ examine1D <- function(sim) {
   spPreds1DSingleFrame <- rbindlist(sim$spPreds1D)
 
   ## Make table of binary normality and unimodality ####
-  ### If p value is less than or equal to 0.05 it fails the test and is not considered normal/unimodal
-  ### fail = 0, pass = 1
-  assumpTab1D <- spPreds1DSingleFrame[, c(1, 2, 9, 11, 12)]
+  ### If p value is less than or equal to 0.05 it is not considered normal/unimodal
+  assumpTab1D <- spPreds1DSingleFrame[, c("FoLRaster", "landForClass", "normality_p", "unimodality_p", "species")]
   assumpTab1D$normal <- NA
-  assumpTab1D$normal[assumpTab1D$normality_p < 0.05] <- 0
-  assumpTab1D$normal[assumpTab1D$normality_p == 0.05] <- 0
-  assumpTab1D$normal[assumpTab1D$normality_p > 0.05] <- 1
+  assumpTab1D$normal[assumpTab1D$normality_p <= 0.05] <- 0 # if p is smaller than or equal to 0.05 it is not normal
+  assumpTab1D$normal[assumpTab1D$normality_p > 0.05] <- 1 # if p is larger than 0.05, we accept null hypothesis that it is normally distributed
 
 
   assumpTab1D$unimodal <- NA
-  assumpTab1D$unimodal[assumpTab1D$unimodality_p < 0.05] <- 0
-  assumpTab1D$unimodal[assumpTab1D$unimodality_p == 0.05] <- 0
-  assumpTab1D$unimodal[assumpTab1D$unimodality_p > 0.05] <- 1
-  assumpTab1D <- assumpTab1D[, c(1, 2, 5, 6, 7)]
+  assumpTab1D$unimodal[assumpTab1D$unimodality_p <= 0.05] <- 0 # if p is smaller than or equal to 0.05 it is multimodal
+  assumpTab1D$unimodal[assumpTab1D$unimodality_p > 0.05] <- 1 # if p is larger than 0.05, we accept null hypothesis that it is unimodal
+  assumpTab1D <- assumpTab1D[, c("FoLRaster", "landForClass", "species", "normal", "unimodal")]
 
 
   ### We make assume that if there is an NA, it is not normal/unimodal
   assumpTab1D$normal[is.na(assumpTab1D$normal) == TRUE] <- 0
   assumpTab1D$unimodal[is.na(assumpTab1D$unimodal) == TRUE] <- 0
 
-
   ### Save
-  write.csv(sim$assumpTab1D, file = file.path(sim$outputPredsLocation, "assumpTab1D.csv"))
+  write.csv(assumpTab1D, file = file.path(sim$outputPredsLocation, "assumpTab1D.csv"))
 
-  ## Make table of prop of sp with p values under 0.05 per class ####
+  ## Make table of prop of sp with p values over 0.05 per class ####
   print("get assumptions by class 1D")
   sim$assumptionsByClass1D <- assumpTab1D[order(landForClass)][, list(
     noSps = .N,
@@ -380,11 +376,11 @@ examine1D <- function(sim) {
     propSpsUnimodal = mean(unimodal),
     smoothingType = "1D"
   ),
-  by = landForClass
+  by = list(FoLRaster, landForClass)
   ]
   write.csv(sim$assumptionsByClass1D, file = file.path(sim$outputPredsLocation, "assumptionsByClass1D.csv"))
 
-  ## Make table of sp giving prop of classes with p values under 0.05 ####
+  ## Make table of sp giving prop of classes with p values over 0.05 ####
   print("get assumptions by sp 1D")
   sim$assumptionsBySp1D <- assumpTab1D[order(species)][, list(
     noClasses = .N,
@@ -401,8 +397,8 @@ examine1D <- function(sim) {
   print("Make for1DAndLc1DRes ")
   sim$for1DAndLc1DRes <- lapply(X = sim$spList, FUN = function(sp) {
     print(sp)
-    NM <- eval(parse(text = paste("sim$spRasters$", sp, sep = "")))
-    PS <- eval(parse(text = paste("sim$for1DAndLc1DMaps$", sp, sep = "")))
+    NM <- sim$spRasters[[sp]]
+    PS <- sim$for1DAndLc1DMaps[[sp]]
     res <- NM - PS
 
     names(res) <- paste(sp)
@@ -416,7 +412,7 @@ examine1D <- function(sim) {
 
   ### save residual rasters
   lapply(X = sim$spList, FUN = function(sp) {
-    raster <- eval(parse(text = paste("sim$for1DAndLc1DRes$", sp, sep = "")))
+    raster <- sim$for1DAndLc1DRes[[sp]]
     names(raster) <- paste(sp)
     terra::writeRaster(
       x = raster,
@@ -443,7 +439,7 @@ examine2D <- function(sim) {
 
   sim$spStats2D <- lapply(X = sim$spList, FUN = function(sp) {
     print(sp)
-    forestedDT <- as.data.table(eval(parse(text = paste("sim$spDatasets$", sp, sep = ""))))
+    forestedDT <- as.data.table(sim$spDatasets[[sp]])
     ## separate forested rows
     forestedDT <- forestedDT[FoLRaster == "forClass"]
     forestedDT <- droplevels(forestedDT)
@@ -459,11 +455,11 @@ examine2D <- function(sim) {
     spDataNew <- cbind(forestedDT, ageClass)
 
     ### create new column, landAgeClass, giving the uniqueLandClass and ageClass combined
-    spDataNew <- as.data.table(unite(spDataNew, landAgeClass, c(landForClass, ageClass), sep = ".", remove = FALSE))
+    spDataNew <- as.data.table(tidyr::unite(spDataNew, landAgeClass, c(landForClass, ageClass), sep = ".", remove = FALSE))
 
 
     ## Make data table of statistics on the sp Data based on 2D classes ####
-    proportionTiesCutoff <- 0.80
+    proportionTiesCutoff <- 0
     singleSpStats2D <- spDataNew[
       order(landAgeClass) # order the rows by the land cover class
     ][, list(
@@ -471,13 +467,13 @@ examine2D <- function(sim) {
       meanSpDensity = mean(spDensity), # get mean sp density
       medianSpDensity = median(spDensity),
       varSpDensity = var(spDensity) * (.N - 1) / .N, # get the variance for sp density for each class
-      seSpDensity = std.error(spDensity), # get the standard error for sp density for each  class
-      normality.p = tryCatch(nortest::ad.test(spDensity)$p.value,
+      seSpDensity = plotrix::std.error(spDensity), # get the standard error for sp density for each  class
+      normality_p = tryCatch(nortest::ad.test(spDensity)$p.value,
         error = function(cond) {
           return(NaN)
         }
       ),
-      unimodality.p = tryCatch(
+      unimodality_p = tryCatch(
         {
           if ((length(unique(spDensity)) / .N) < proportionTiesCutoff) {
             NaN
@@ -507,13 +503,13 @@ examine2D <- function(sim) {
       all.x = TRUE
     )
     sim$forClassCountTab$classCount[is.na(sim$forClassCountTab$classCount)] <- 0
-    sim$forClassCountTab$meetsMinStatsSample <- sim$forClassCountTab$classCount > P(sim)$min2DStatsSample
+    sim$forClassCountTab$meetsMinStatsSample <- sim$forClassCountTab$classCount >= P(sim)$min2DStatsSample
 
     ### save
     write.csv(sim$forClassCountTab, file = file.path(sim$outputPredsLocation, "forClassCountTab.csv"))
 
     # Exclude any classes with smaller sample size than minStatsSample (a parameter) ####
-    singleSpStats2D <- subset(singleSpStats2D, classCount > P(sim)$min2DStatsSample)
+    singleSpStats2D <- subset(singleSpStats2D, classCount >= P(sim)$min2DStatsSample)
 
     return(singleSpStats2D)
   })
@@ -528,22 +524,26 @@ examine2D <- function(sim) {
   print("Calculate 2DPS assumption summaries")
 
   ## Make table of binary normality and unimodality ####
-  assumpTab2D <- spStats2DSingleFrame[, c(1, 7, 8, 9)]
+  ### If p value is less than or equal to 0.05 it is not considered normal/unimodal
+  assumpTab2D <- spStats2DSingleFrame[, c("landAgeClass", "normality_p", "unimodality_p", "species")]
   assumpTab2D$normal <- NA
-  assumpTab2D$normal[assumpTab2D$normality > 0.05] <- 0
-  assumpTab2D$normal[assumpTab2D$normality == 0.05] <- 1
-  assumpTab2D$normal[assumpTab2D$normality < 0.05] <- 1
+  assumpTab2D$normal[assumpTab2D$normality_p <= 0.05] <- 0 # if p is smaller than or equal to 0.05 it is not normal
+  assumpTab2D$normal[assumpTab2D$normality_p > 0.05] <- 1 # if p is larger than 0.05, we accept null hypothesis that it is normally distributed
 
 
   assumpTab2D$unimodal <- NA
-  assumpTab2D$unimodal[assumpTab2D$unimodality > 0.05] <- 0
-  assumpTab2D$unimodal[assumpTab2D$unimodality == 0.05] <- 1
-  assumpTab2D$unimodal[assumpTab2D$unimodality < 0.05] <- 1
-  assumpTab2D <- assumpTab2D[, c(1, 4, 5, 6)]
+  assumpTab2D$unimodal[assumpTab2D$unimodality_p <= 0.05] <- 0 # if p is smaller than or equal to 0.05 it is multimodal
+  assumpTab2D$unimodal[assumpTab2D$unimodality_p > 0.05] <- 1 # if p is larger than 0.05, we accept null hypothesis that it is unimodal
+  assumpTab2D <- assumpTab2D[, c("landAgeClass", "species", "normal", "unimodal")]
+
+  ### We make assume that if there is an NA, it is not normal/unimodal
+  assumpTab2D$normal[is.na(assumpTab2D$normal) == TRUE] <- 0
+  assumpTab2D$unimodal[is.na(assumpTab2D$unimodal) == TRUE] <- 0
+
   assumpTab2D
   write.csv(assumpTab2D, file = file.path(sim$outputPredsLocation, "assumpTab2D.csv"))
 
-  ## Make table of prop of sp with p values under 0.05 per class ####
+  ## Make table of prop of sp with p values over 0.05 per class ####
   sim$assumptionsByClass2D <- assumpTab2D[order(landAgeClass)][, list(
     noSps = .N,
     propSpsNormal = mean(normal),
@@ -554,7 +554,7 @@ examine2D <- function(sim) {
   ]
   write.csv(sim$assumptionsByClass2D, file = file.path(sim$outputPredsLocation, "assumptionsByClass2D.csv"))
 
-  ## Make table of sp giving prop of classes with p values under 0.05 ####
+  ## Make table of sp giving prop of classes with p values over 0.05 ####
   sim$assumptionsBySp2D <- assumpTab2D[order(species)][, list(
     noClasses = .N,
     propClassesNormal = mean(normal),
@@ -572,8 +572,8 @@ examine2D <- function(sim) {
   sim$for2DAndLc1DRes <- lapply(X = sim$spList, FUN = function(sp) {
     print(sp)
 
-    NM <- eval(parse(text = paste("sim$spRasters$", sp, sep = "")))
-    PS <- eval(parse(text = paste("sim$for2DAndLc1DMaps$", sp, sep = "")))
+    NM <- sim$spRasters[[sp]]
+    PS <- sim$for2DAndLc1DMaps[[sp]]
     res <- NM - PS
 
     names(res) <- paste(sp)
@@ -586,7 +586,7 @@ examine2D <- function(sim) {
 
   ### save
   lapply(X = sim$spList, FUN = function(sp) {
-    raster <- eval(parse(text = paste("sim$for2DAndLc1DRes$", sp, sep = "")))
+    raster <- sim$for2DAndLc1DRes[[sp]]
     names(raster) <- paste(sp)
     terra::writeRaster(
       x = raster,
@@ -602,9 +602,9 @@ examine2D <- function(sim) {
   spearmanStats <- lapply(X = sim$spList, FUN = function(sp) {
     print(sp)
 
-    nmRas <- eval(parse(text = paste("sim$spRasters$", sp, sep = "")))
-    map1D <- eval(parse(text = paste("sim$for1DAndLc1DMaps$", sp, sep = "")))
-    map2D <- eval(parse(text = paste("sim$for2DAndLc1DMaps$", sp, sep = "")))
+    nmRas <- sim$spRasters[[sp]]
+    map1D <- sim$for1DAndLc1DMaps[[sp]]
+    map2D <- sim$for2DAndLc1DMaps[[sp]]
 
 
     valsNM <- as.data.table(terra::values(nmRas, dataframe = FALSE))
@@ -641,8 +641,8 @@ examine2D <- function(sim) {
   ## Get tables of residual values ####
   print("get resTabs")
   sim$resTabs <- lapply(X = sim$spList, FUN = function(sp) {
-    ras1D <- eval(parse(text = paste("sim$for1DAndLc1DRes$", sp, sep = "")))
-    ras2D <- eval(parse(text = paste("sim$for2DAndLc1DRes$", sp, sep = "")))
+    ras1D <- sim$for1DAndLc1DRes[[sp]]
+    ras2D <- sim$for2DAndLc1DRes[[sp]]
 
     resVals1D <- as.data.table(terra::values(ras1D, dataframe = FALSE))
     resVals1D <- setnames(resVals1D, "resVals")
@@ -672,11 +672,11 @@ examine2D <- function(sim) {
   residualStats <- lapply(X = sim$spList, FUN = function(sp) {
     print(sp)
 
-    nmRas <- eval(parse(text = paste("sim$spRasters$", sp, sep = "")))
-    res1D <- eval(parse(text = paste("sim$for1DAndLc1DRes$", sp, sep = "")))
-    res2D <- eval(parse(text = paste("sim$for2DAndLc1DRes$", sp, sep = "")))
+    nmRas <- sim$spRasters[[sp]]
+    res1D <- sim$for1DAndLc1DRes[[sp]]
+    res2D <- sim$for2DAndLc1DRes[[sp]]
 
-    resTab <- eval(parse(text = paste("sim$resTabs$", sp, sep = "")))
+    resTab <- sim$resTabs[[sp]]
     absResStats <- resTab[, list(
       medResAbs = median(absResVals),
       maxResAbs = max(absResVals)
@@ -723,28 +723,28 @@ compare1D2D <- function(sim) {
 
   ## Unimodality and normality  ####
   names(sim$assumptionsByClass1D)[names(sim$assumptionsByClass1D) == "landForClass"] <- "landAgeClass"
-  sim$assumptionsByClass1D <- sim$assumptionsByClass1D[1:6]
-  sim$assumptionsByClass1D <- droplevels(sim$assumptionsByClass1D)
-  # assumptionsByClass1D_land <- assumptionsByClass1D[1:6]
-  # assumptionsByClass1D_land  <- droplevels(assumptionsByClass1D_land)
-  assumptionsByClass <- rbind(sim$assumptionsByClass1D, sim$assumptionsByClass2D)
-  # assumptionsByClass <- assumptionsByClass[,2:5]
+  sim$assumptionsByClass1D_for <- sim$assumptionsByClass1D[FoLRaster == "forClass"]
+  sim$assumptionsByClass1D_for <- sim$assumptionsByClass1D_for[, c("landAgeClass", "noSps", "propSpsNormal", "propSpsUnimodal", "smoothingType")]
+  sim$assumptionsByClass1D_for <- droplevels(sim$assumptionsByClass1D_for)
+
+  assumptionsByClass <- rbind(sim$assumptionsByClass1D_for, sim$assumptionsByClass2D)
+
   assumptionsByClass$smoothingType <- as.factor(assumptionsByClass$smoothingType)
   assumptionsByClass$landAgeClass <- as.factor(assumptionsByClass$landAgeClass)
 
   ### Gather summaries
   print("assumptions by class 1D summary")
-  summary(sim$assumptionsByClass1D)
-  # gt_plt_summary(sim$assumptionsByClass1D)
-  sdUnimodality_1D <- sd(sim$assumptionsByClass1D$propSpsUnimodal)
+  print(summary(sim$assumptionsByClass1D_for))
+
+  sdUnimodality_1D <- sd(sim$assumptionsByClass1D_for$propSpsUnimodal)
   sdUnimodality_2D <- sd(sim$assumptionsByClass2D$propSpsUnimodal)
-  sdNormality_1D <- sd(sim$assumptionsByClass1D$propSpsNormal)
+  sdNormality_1D <- sd(sim$assumptionsByClass1D_for$propSpsNormal)
   sdNormality_2D <- sd(sim$assumptionsByClass2D$propSpsNormal)
   sim$sdAssumptions <- data.table(sdUnimodality_1D, sdUnimodality_2D, sdNormality_1D, sdNormality_2D)
   print(sim$sdAssumptions)
 
   print("assumptions by class 2D summary")
-  summary(sim$assumptionsByClass2D)
+  print(summary(sim$assumptionsByClass2D))
 
   ### Do t test - unimodality
   print("1D vs 2D unimodality")
@@ -878,7 +878,7 @@ compare1D2D <- function(sim) {
 
   # Get rasterToMatch ####
   if (!suppliedElsewhere("rasterToMatch", sim)) {
-    print("get rasterTomatch from local drive")
+    print("get rasterToMatch from local drive")
     sim$rasterToMatch <- terra::rast(file.path(P(sim)$rasterToMatchLocation, P(sim)$rasterToMatchName))
     names(sim$rasterToMatch) <- "rasterToMatch"
   }
@@ -910,7 +910,7 @@ compare1D2D <- function(sim) {
     # postprocess raster - cropping, masking to the study area and reprojecting to the rasterToMatch
     sim$forClassRas <- reproducible::Cache(reproducible::postProcessTo,
       from = sim$forClassRas,
-      to = sim$rasterTomatch,
+      to = sim$rasterToMatch,
       cropTo = sim$studyArea,
       maskTo = sim$studyArea,
       overwrite = FALSE,
@@ -929,7 +929,7 @@ compare1D2D <- function(sim) {
     # postprocess raster - cropping, masking to the study area and reprojecting to the rasterToMatch
     sim$landClassRas <- reproducible::Cache(reproducible::postProcessTo,
       from = sim$landClassRas,
-      to = sim$rasterTomatch,
+      to = sim$rasterToMatch,
       cropTo = sim$studyArea,
       maskTo = sim$studyArea,
       overwrite = FALSE,
