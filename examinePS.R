@@ -495,8 +495,8 @@ examine2D <- function(sim) {
     ageClasses <- as.data.table(ageClasses)
     ras <- rep("forClass", times = nrow(ageClasses))
     sim$forClassCountTab <- cbind(ras, landClasses, ageClasses)
-    sim$forClassCountTab <- unite(sim$forClassCountTab, landAgeClass, c(landClasses, ageClasses), sep = ".", remove = FALSE)
-    sim$forClassCountTab <- as.data.table(unite(sim$forClassCountTab, landAgeClass, c(ras, landAgeClass), sep = "_", remove = FALSE))
+    sim$forClassCountTab <- tidyr::unite(sim$forClassCountTab, landAgeClass, c(landClasses, ageClasses), sep = ".", remove = FALSE)
+    sim$forClassCountTab <- as.data.table(tidyr::unite(sim$forClassCountTab, landAgeClass, c(ras, landAgeClass), sep = "_", remove = FALSE))
     sim$forClassCountTab <- base::merge(sim$forClassCountTab,
       singleSpStats2D[, .(landAgeClass, classCount)],
       by = "landAgeClass",
@@ -645,13 +645,13 @@ examine2D <- function(sim) {
     ras2D <- sim$for2DAndLc1DRes[[sp]]
 
     resVals1D <- as.data.table(terra::values(ras1D, dataframe = FALSE))
-    resVals1D <- setnames(resVals1D, "resVals")
+    resVals1D <- setnames(resVals1D, "residualVals")
     resVals1D <- na.omit(resVals1D)
     res1DLab <- rep("res1D", nrow(resVals1D))
     resVals1D <- cbind(resVals1D, typePS = res1DLab)
 
     resVals2D <- as.data.table(terra::values(ras2D, dataframe = FALSE))
-    resVals2D <- setnames(resVals2D, "resVals")
+    resVals2D <- setnames(resVals2D, "residualVals")
     resVals2D <- na.omit(resVals2D)
     res2DLab <- rep("res2D", nrow(resVals2D))
     resVals2D <- cbind(resVals2D, typePS = res2DLab)
@@ -659,14 +659,13 @@ examine2D <- function(sim) {
     resVals <- rbind(resVals1D, resVals2D)
     species <- rep(paste(sp), nrow(resVals))
     resVals <- cbind(resVals, species = species)
-    resVals[, absResVals := abs(resVals)]
+    resVals[, absResVals := abs(residualVals)]
     print(resVals)
 
     return(resVals)
   })
   names(sim$resTabs) <- sim$spList
-
-
+ 
   ## Calculate stats ####
   print("get residual stats")
   residualStats <- lapply(X = sim$spList, FUN = function(sp) {
@@ -791,8 +790,10 @@ compare1D2D <- function(sim) {
   sdSpearman2D <- sd(sim$spearmanStats$spearman2D)
   sim$sdSpearman <- data.table(sdSpearman1D, sdSpearman2D)
   print(sim$sdSpearman)
-
-  spearmanTab <- gather(data = sim$spearmanStats, key = "smoothingType", value = "spearmanStat")
+  spearmanTab <- tidyr::pivot_longer(sim$spearmanStats,
+                                     cols      = everything(),
+                                     names_to  = "smoothingType",
+                                     values_to = "spearmanStat")
   spearmanTab <- na.omit(spearmanTab)
   spearmanTab <- as.data.table(spearmanTab)
 
@@ -817,14 +818,17 @@ compare1D2D <- function(sim) {
 
   ## Spatial autocorrelation ####
   sim$residualStats <- data.table(sim$residualStats)
-  moranStats <- sim$residualStats[, c(3:4)]
+  moranStats <- sim$residualStats[, c("autocor1DRes", "autocor2DRes")]
   print("moran stats summary")
   print(summary(moranStats))
   sdMoran1D <- sd(moranStats$autocor1DRes)
   sdMoran2D <- sd(moranStats$autocor2DRes)
   sim$sdMoran <- data.table(sdMoran1D, sdMoran2D)
   print(sim$sdMoran)
-  moranStats <- gather(data = moranStats, key = "smoothingType", value = "MoransI")
+  moranStats <- tidyr::pivot_longer(moranStats,
+                                    cols      = everything(),
+                                    names_to  = "smoothingType",
+                                    values_to = "MoransI")
   moranStats <- na.omit(moranStats)
   moranStats <- as.data.table(moranStats)
 
