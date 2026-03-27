@@ -370,7 +370,7 @@ examine1D <- function(sim) {
 
   ## Make table of prop of sp with p values over 0.05 per class ####
   print("get assumptions by class 1D")
-  sim$assumptionsByClass1D <- assumpTab1D[order(landForClass)][, list(
+  sim$assumptionsByClass1D <- assumpTab1D[base::order(landForClass)][, list(
     noSps = .N,
     propSpsNormal = mean(normal),
     propSpsUnimodal = mean(unimodal),
@@ -382,7 +382,7 @@ examine1D <- function(sim) {
 
   ## Make table of sp giving prop of classes with p values over 0.05 ####
   print("get assumptions by sp 1D")
-  sim$assumptionsBySp1D <- assumpTab1D[order(species)][, list(
+  sim$assumptionsBySp1D <- assumpTab1D[base::order(species)][, list(
     noClasses = .N,
     propClassesNormal = mean(normal),
     propClassesUnimodal = mean(unimodal),
@@ -461,7 +461,7 @@ examine2D <- function(sim) {
     ## Make data table of statistics on the sp Data based on 2D classes ####
     proportionTiesCutoff <- 0
     singleSpStats2D <- spDataNew[
-      order(landAgeClass) # order the rows by the land cover class
+      base::order(landAgeClass) # order the rows by the land cover class
     ][, list(
       classCount = .N, # get the number of cells each cover class
       meanSpDensity = mean(spDensity), # get mean sp density
@@ -544,7 +544,7 @@ examine2D <- function(sim) {
   write.csv(assumpTab2D, file = file.path(sim$outputPredsLocation, "assumpTab2D.csv"))
 
   ## Make table of prop of sp with p values over 0.05 per class ####
-  sim$assumptionsByClass2D <- assumpTab2D[order(landAgeClass)][, list(
+  sim$assumptionsByClass2D <- assumpTab2D[base::order(landAgeClass)][, list(
     noSps = .N,
     propSpsNormal = mean(normal),
     propSpsUnimodal = mean(unimodal),
@@ -555,7 +555,7 @@ examine2D <- function(sim) {
   write.csv(sim$assumptionsByClass2D, file = file.path(sim$outputPredsLocation, "assumptionsByClass2D.csv"))
 
   ## Make table of sp giving prop of classes with p values over 0.05 ####
-  sim$assumptionsBySp2D <- assumpTab2D[order(species)][, list(
+  sim$assumptionsBySp2D <- assumpTab2D[base::order(species)][, list(
     noClasses = .N,
     propClassesNormal = mean(normal),
     propClassesUnimodal = mean(unimodal),
