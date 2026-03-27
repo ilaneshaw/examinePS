@@ -416,7 +416,7 @@ examine1D <- function(sim) {
     names(raster) <- paste(sp)
     terra::writeRaster(
       x = raster,
-      filename = file.path(sim$outputRasLocation, paste(sp, "-for1DAndLc1DRes", sep = "")),
+      filename = file.path(sim$outputRasLocation, paste(sp, "_for1DAndLc1DRes", sep = "")),
       filetype = "GTiff",
       gdal = "COMPRESS=NONE",
       overwrite = TRUE
@@ -590,7 +590,7 @@ examine2D <- function(sim) {
     names(raster) <- paste(sp)
     terra::writeRaster(
       x = raster,
-      filename = file.path(sim$outputRasLocation, paste(sp, "-for2DAndLc1DRes", sep = "")),
+      filename = file.path(sim$outputRasLocation, paste(sp, "_for2DAndLc1DRes", sep = "")),
       filetype = "GTiff",
       gdal = "COMPRESS=NONE",
       overwrite = TRUE
