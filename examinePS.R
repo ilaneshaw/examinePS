@@ -124,7 +124,7 @@ defineModule(sim, list(
       "Should caching of events or module be used?"
     ),
     defineParameter(
-      "min2DStatsSample", "numeric", 100, 2, NA,
+      "min2DStatsSample", "numeric", 30, NA, NA,
       "exclude any classes from 2D stats table that have a sample size smaller than minStatsSample"
     )
   ),
@@ -303,35 +303,35 @@ Save <- function(sim) {
 ### template for plot events
 plotFun <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
-
-  # Plot sp raster, PS raster and res raster for comparison ####
-  lapply(sim$spList, FUN = function(sp) {
-    ### get sp rasters
-    print(sp)
-    nmRas <- sim$spRasters[[sp]]
-    mapRas1D <- sim$for1DAndLc1DMaps[[sp]]
-    resRas1D <- sim$for1DAndLc1DRes[[sp]]
-    if (P(sim)$only1DPS == FALSE) {
-      mapRas2D <- sim$for2DAndLc1DMaps[[sp]]
-      resRas2D <- sim$for2DAndLc1DRes[[sp]]
-    }
-
-    ## 1DPS ####
-    clearPlot()
-    Plot(nmRas, title = paste("BAM Sp Density Prediction Model for ", sp, sep = ""), na.color = "white")
-    Plot(mapRas1D, title = paste("1D Mapped Predictions for ", sp, sep = ""), na.color = "white")
-    Plot(resRas1D, title = paste("1D Residuals for ", sp, sep = ""), na.color = "white")
-
-    ## 2DPS ####
-    if (P(sim)$only1DPS == FALSE) {
-      clearPlot()
-      Plot(nmRas, title = paste("BAM Sp Density Prediction Model for ", sp, sep = ""), na.color = "white")
-      Plot(mapRas2D, title = paste("2D Mapped Predictions for ", sp, sep = ""), na.color = "white")
-      Plot(resRas2D, title = paste("2D Residuals for ", sp, sep = ""), na.color = "white")
-    }
-  })
-
-  print("end examinePS plotting")
+  #
+  # # Plot sp raster, PS raster and res raster for comparison ####
+  # lapply(sim$spList, FUN = function(sp) {
+  #   ### get sp rasters
+  #   print(sp)
+  #   nmRas <- sim$spRasters[[sp]]
+  #   mapRas1D <- sim$for1DAndLc1DMaps[[sp]]
+  #   resRas1D <- sim$for1DAndLc1DRes[[sp]]
+  #   if (P(sim)$only1DPS == FALSE) {
+  #     mapRas2D <- sim$for2DAndLc1DMaps[[sp]]
+  #     resRas2D <- sim$for2DAndLc1DRes[[sp]]
+  #   }
+  #
+  #   ## 1DPS ####
+  #   clearPlot()
+  #   Plot(nmRas, title = paste("BAM Sp Density Prediction Model for ", sp, sep = ""), na.color = "white")
+  #   Plot(mapRas1D, title = paste("1D Mapped Predictions for ", sp, sep = ""), na.color = "white")
+  #   Plot(resRas1D, title = paste("1D Residuals for ", sp, sep = ""), na.color = "white")
+  #
+  #   ## 2DPS ####
+  #   if (P(sim)$only1DPS == FALSE) {
+  #     clearPlot()
+  #     Plot(nmRas, title = paste("BAM Sp Density Prediction Model for ", sp, sep = ""), na.color = "white")
+  #     Plot(mapRas2D, title = paste("2D Mapped Predictions for ", sp, sep = ""), na.color = "white")
+  #     Plot(resRas2D, title = paste("2D Residuals for ", sp, sep = ""), na.color = "white")
+  #   }
+  # })
+  #
+  # print("end examinePS plotting")
 
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
@@ -665,7 +665,7 @@ examine2D <- function(sim) {
     return(resVals)
   })
   names(sim$resTabs) <- sim$spList
- 
+
   ## Calculate stats ####
   print("get residual stats")
   residualStats <- lapply(X = sim$spList, FUN = function(sp) {
@@ -731,22 +731,20 @@ compare1D2D <- function(sim) {
   assumptionsByClass$smoothingType <- as.factor(assumptionsByClass$smoothingType)
   assumptionsByClass$landAgeClass <- as.factor(assumptionsByClass$landAgeClass)
 
-  ### Gather summaries
+  ### Print summaries
   print("assumptions by class 1D summary")
   print(summary(sim$assumptionsByClass1D_for))
 
-  sdUnimodality_1D <- sd(sim$assumptionsByClass1D_for$propSpsUnimodal)
-  sdUnimodality_2D <- sd(sim$assumptionsByClass2D$propSpsUnimodal)
-  sdNormality_1D <- sd(sim$assumptionsByClass1D_for$propSpsNormal)
-  sdNormality_2D <- sd(sim$assumptionsByClass2D$propSpsNormal)
-  sim$sdAssumptions <- data.table(sdUnimodality_1D, sdUnimodality_2D, sdNormality_1D, sdNormality_2D)
-  print(sim$sdAssumptions)
 
   print("assumptions by class 2D summary")
   print(summary(sim$assumptionsByClass2D))
 
   ### Do t test - unimodality
   print("1D vs 2D unimodality")
+
+  sd_1D <- sd(sim$assumptionsByClass1D_for$propSpsUnimodal)
+  sd_2D <- sd(sim$assumptionsByClass2D$propSpsUnimodal)
+
   sim$unimodalityTTest <- tryCatch(
     data.frame(broom::tidy(t.test(propSpsUnimodal ~ smoothingType,
       data = assumptionsByClass
@@ -760,11 +758,16 @@ compare1D2D <- function(sim) {
     names(sim$unimodalityTTest) <- c("estimate", "mean1DPS", "mean2DPS", "t", "p.value", "df", "conf.low", "conf.high", "method", "alternative")
     data <- "propSpsUnimodal_by_smoothingType"
     sim$unimodalityTTest <- data.frame(data, sim$unimodalityTTest)
+    sim$unimodalityTTest <- cbind(sim$unimodalityTTest, sd_1D, sd_2D)
   }
   print(sim$unimodalityTTest)
 
   ### Do t test - normality
   print("1D vs 2D normality")
+
+  sd_1D <- sd(sim$assumptionsByClass1D_for$propSpsNormal)
+  sd_2D <- sd(sim$assumptionsByClass2D$propSpsNormal)
+
   sim$normalityTTest <- tryCatch(
     data.frame(broom::tidy(t.test(propSpsNormal ~ smoothingType,
       data = assumptionsByClass
@@ -779,6 +782,7 @@ compare1D2D <- function(sim) {
     names(sim$normalityTTest) <- c("estimate", "mean1DPS", "mean2DPS", "t", "p.value", "df", "conf.low", "conf.high", "method", "alternative")
     data <- "propSpsNormal_by_smoothingType"
     sim$normalityTTest <- data.frame(data, sim$normalityTTest)
+    sim$normalityTTest <- cbind(sim$normalityTTest, sd_1D, sd_2D)
   }
   print(sim$normalityTTest)
 
@@ -786,14 +790,15 @@ compare1D2D <- function(sim) {
   sim$spearmanStats <- as.data.frame(sim$spearmanStats)
   print("spearman stats summary")
   print(summary(sim$spearmanStats))
-  sdSpearman1D <- sd(sim$spearmanStats$spearman1D)
-  sdSpearman2D <- sd(sim$spearmanStats$spearman2D)
-  sim$sdSpearman <- data.table(sdSpearman1D, sdSpearman2D)
+  sd_1D <- sd(sim$spearmanStats$spearman1D)
+  sd_2D <- sd(sim$spearmanStats$spearman2D)
+  sim$sdSpearman <- data.table(sd_1D, sd_2D)
   print(sim$sdSpearman)
   spearmanTab <- tidyr::pivot_longer(sim$spearmanStats,
-                                     cols      = everything(),
-                                     names_to  = "smoothingType",
-                                     values_to = "spearmanStat")
+    cols      = everything(),
+    names_to  = "smoothingType",
+    values_to = "spearmanStat"
+  )
   spearmanTab <- na.omit(spearmanTab)
   spearmanTab <- as.data.table(spearmanTab)
 
@@ -812,6 +817,7 @@ compare1D2D <- function(sim) {
     names(sim$corrTTest) <- c("estimate", "mean1DPS", "mean2DPS", "t", "p.value", "df", "conf.low", "conf.high", "method", "alternative")
     data <- "spearmanStat_by_smoothingType"
     sim$corrTTest <- data.frame(data, sim$corrTTest)
+    sim$corrTTest <- cbind(sim$corrTTest, sd_1D, sd_2D)
   }
   print(sim$corrTTest)
 
@@ -821,14 +827,15 @@ compare1D2D <- function(sim) {
   moranStats <- sim$residualStats[, c("autocor1DRes", "autocor2DRes")]
   print("moran stats summary")
   print(summary(moranStats))
-  sdMoran1D <- sd(moranStats$autocor1DRes)
-  sdMoran2D <- sd(moranStats$autocor2DRes)
-  sim$sdMoran <- data.table(sdMoran1D, sdMoran2D)
+  sd_1D <- sd(moranStats$autocor1DRes)
+  sd_2D <- sd(moranStats$autocor2DRes)
+  sim$sdMoran <- data.table(sd_1D, sd_2D)
   print(sim$sdMoran)
   moranStats <- tidyr::pivot_longer(moranStats,
-                                    cols      = everything(),
-                                    names_to  = "smoothingType",
-                                    values_to = "MoransI")
+    cols      = everything(),
+    names_to  = "smoothingType",
+    values_to = "MoransI"
+  )
   moranStats <- na.omit(moranStats)
   moranStats <- as.data.table(moranStats)
 
@@ -845,6 +852,7 @@ compare1D2D <- function(sim) {
     names(sim$saTTest) <- c("estimate", "mean1DPS", "mean2DPS", "t", "p.value", "df", "conf.low", "conf.high", "method", "alternative")
     data <- "MoransI_by_smoothingType"
     sim$saTTest <- data.frame(data, sim$saTTest)
+    sim$saTTest <- cbind(sim$saTTest, sd_1D, sd_2D)
   }
   print(sim$saTTest)
 
